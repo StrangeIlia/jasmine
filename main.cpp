@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     model_veiwer2.show();*/
 
     bstu::ModelViewerWidget_Qt3D model_veiwer3;
-    model_veiwer3.setTree(greenhouse);
+    model_veiwer3.setTree(box);
     model_veiwer3.container()->show();
 
     return a.exec();
