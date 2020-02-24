@@ -5,6 +5,9 @@
 #include "PolyhedronTreeView.h"
 
 #include "ModelViewerWidget_Qt3D.h"
+#include "PolyhedronTreeView_Qt3D.h"
+
+#include <thread>
 
 #include <cmath>
 
@@ -138,17 +141,24 @@ int main(int argc, char *argv[])
 
     /*bstu::PolyhedronTreeView tree_viewer;
     tree_viewer.setTree(greenhouse);
-    tree_viewer.show();*/
-
+    tree_viewer.show();
+*/
     bstu::Tree* box = bstu::create_box();
 
     /*bstu::ModelViewerWidget model_veiwer2;
     model_veiwer2.setTree(box);
     model_veiwer2.show();*/
 
-    bstu::ModelViewerWidget_Qt3D model_veiwer3;
-    model_veiwer3.setTree(box);
-    model_veiwer3.container()->show();
+    /*bstu::ModelViewerWidget_Qt3D model_veiwer3;
+    model_veiwer3.setTree(greenhouse);
+    model_veiwer3.container()->show();*/
+
+    bstu::PolyhedronTreeView_Qt3D tree_viewer(box);
+    tree_viewer.show();
+
+    // Переключение на другое дерево работает нормально, но вряд ли оно где то понадобиться
+    // std::this_thread::sleep_for(std::chrono::seconds(10));
+    // tree_viewer.setTree(box);
 
     return a.exec();
 }

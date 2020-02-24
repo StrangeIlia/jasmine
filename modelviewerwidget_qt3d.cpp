@@ -3,7 +3,6 @@
 namespace bstu {
 
 using namespace Qt3DCore;
-using namespace Qt3DInput;
 using namespace Qt3DRender;
 using namespace Qt3DExtras;
 
@@ -32,11 +31,12 @@ ModelViewerWidget_Qt3D::ModelViewerWidget_Qt3D(QWidget* parent)
     cameraEntity->setPosition(QVector3D(0.0f, 0.0f, -5.0f));
     cameraEntity->setViewCenter(QVector3D(0.0f, 0.0f, 0.0f));
 
-    /// Говорим, что камера будет орбитальной
-    QOrbitCameraController* orbitCameraController = new QOrbitCameraController(_rootEntity);
+
+    /// Говорим, что камера будет орбитальной (QOrbitCameraController)
+    MyOrbitCameraController* orbitCameraController = new MyOrbitCameraController(_rootEntity);
     orbitCameraController->setCamera(cameraEntity);
     /// Устанавливаем предел на приближение (на отдаление предела нет)
-    orbitCameraController->setZoomInLimit(0.2f);
+    orbitCameraController->setZoomInLimit(4.0f);
     _cameraController = orbitCameraController;
 
     /// Настраиваем освещение
@@ -45,9 +45,22 @@ ModelViewerWidget_Qt3D::ModelViewerWidget_Qt3D(QWidget* parent)
     light->setColor("white");
     light->setIntensity(1);
     lightEntity->addComponent(light);
-    Qt3DCore::QTransform *lightTransform = new Qt3DCore::QTransform(lightEntity);
-    lightTransform->setTranslation(cameraEntity->position());
+    /// Задаем позицию источника света как отдельное свойство
+    /// Прикрепляем позицию источника света к позиции камеры
+    Qt3DCore::QTransform *lightTransform = cameraEntity->componentsOfType<Qt3DCore::QTransform>().first();
     lightEntity->addComponent(lightTransform);
+
+    _selectedObjectMaterial = new QPhongAlphaMaterial(_rootEntity);
+    _selectedObjectMaterial->setShininess(0.8f);
+    _selectedObjectMaterial->setDiffuse(Qt::red);
+
+    _screenRayCaster = new QScreenRayCaster(_rootEntity);
+    _screenRayCaster->setRunMode(Qt3DRender::QAbstractRayCaster::SingleShot);
+    _rootEntity->addComponent(_screenRayCaster);
+
+    QObject::connect(_screenRayCaster, SIGNAL(hitsChanged(const Qt3DRender::QAbstractRayCaster::Hits)),
+                     this, SLOT(hitsEvent(const Qt3DRender::QAbstractRayCaster::Hits)));
+
     _sourcesOfLight.push_back(light);
 }
 
@@ -58,19 +71,15 @@ ModelViewerWidget_Qt3D::~ModelViewerWidget_Qt3D()
     _cameraController->deleteLater();
     _rootEntity->deleteLater();
     _container->deleteLater();
+    _selectedObjectMaterial->deleteLater();
 }
 
-void ModelViewerWidget_Qt3D::setTree(Tree* tree)
+void ModelViewerWidget_Qt3D::setTree(Tree* tree, bool entitiesEnabled)
 {
     clearEntities();
-    QPhongAlphaMaterial *material = new Qt3DExtras::QPhongAlphaMaterial(_rootEntity);
+    QPhongAlphaMaterial *material = new QPhongAlphaMaterial(_rootEntity);
     /// Указываем цвет материала
     material->setAmbient(QColor::fromRgbF(50.0 / 255.0, 130.0 / 255.0, 200.0 / 255.0, 1));
-    //material->setAlpha(1.0f);
-    /*material->setAmbient(QColor(28, 61, 136));
-    material->setDiffuse(QColor(11, 56, 159));
-    material->setSpecular(QColor(10, 67, 199));
-    */
     material->setShininess(0.8f);
     material->setAlpha(1.0f);
     for (unsigned i = 0; i != tree->polyhedronsCount(); i++)
@@ -79,34 +88,87 @@ void ModelViewerWidget_Qt3D::setTree(Tree* tree)
         Vertex center = polyhedron->center();
         Qt3DCore::QTransform *transform = new Qt3DCore::QTransform();
         transform->setTranslation(QVector3D(-center.x, -center.y, -center.z));
-        //transform->setTranslation(-center(polyhedron));
-        /*
-        for(int j = 0; j < polyhedron->size(); ++j)
-        {
-            QEntity* entity = new QEntity(_rootEntity);
-            QGeometryRenderer* geometryRenderer = createGeomentyRenderer(polyhedron->polygon(j));
-            entity->addComponent(material);
-            entity->addComponent(transform);
-            entity->addComponent(geometryRenderer);
-            _entities.push_back(entity);
-        }
-        */
-
         /// Создаем сущность
         QEntity* entity = new QEntity(_rootEntity);
-
+        entity->setEnabled(entitiesEnabled);
         appendGeomentyRenderer(entity, tree->polyhedron(i));
         entity->addComponent(material);
         entity->addComponent(transform);
         _entities.push_back(entity);
-
-
     }
 }
 
 QWidget* ModelViewerWidget_Qt3D::container()
 {
     return _container;
+}
+
+const QVector<QEntity*>& ModelViewerWidget_Qt3D::entities()
+{
+    return _entities;
+}
+
+// Цвет выделяемой сущности
+QPhongAlphaMaterial* ModelViewerWidget_Qt3D::selectedObjectMaterial()
+{
+    return _selectedObjectMaterial;
+}
+
+void ModelViewerWidget_Qt3D::mousePressEvent(QMouseEvent* event)
+{
+    if(event->button() & Qt::MouseButton::LeftButton)
+        _screenRayCaster->trigger(event->pos());
+}
+
+void ModelViewerWidget_Qt3D::hitsEvent(const Qt3DRender::QAbstractRayCaster::Hits hits)
+{
+    QEntity* entity = nullptr;
+
+    float min = std::numeric_limits<float>::max();
+    for(const QRayCasterHit& hit : hits)
+    {
+        float dist = hit.distance();
+        if(min > dist)
+        {
+            min = dist;
+            entity = hit.entity();
+        }
+    }
+
+    if(_selectedEntity != entity)
+    {
+        if(_selectedEntity != nullptr)
+        {
+            _selectedEntity->removeComponent(_selectedObjectMaterial);
+            _selectedEntity->addComponent(_oldSelectedObjectMaterial);
+        }
+        if(entity != nullptr)
+        {
+            _oldSelectedObjectMaterial = entity->componentsOfType<QPhongAlphaMaterial>().first();
+            entity->removeComponent(_oldSelectedObjectMaterial);
+            entity->addComponent(_selectedObjectMaterial);
+            _selectedEntity = entity;
+        }
+        else
+        {
+            _selectedEntity = nullptr;
+            _oldSelectedObjectMaterial = nullptr;
+        }
+    }
+    else if(_selectedEntity != nullptr)
+    {
+        QPhongAlphaMaterial* material = entity->componentsOfType<QPhongAlphaMaterial>().first();;
+        if(material == _oldSelectedObjectMaterial)
+        {
+            entity->removeComponent(_oldSelectedObjectMaterial);
+            entity->addComponent(_selectedObjectMaterial);
+        }
+        else
+        {
+            _selectedEntity->removeComponent(_selectedObjectMaterial);
+            _selectedEntity->addComponent(_oldSelectedObjectMaterial);
+        }
+    }
 }
 
 void ModelViewerWidget_Qt3D::clearEntities()
@@ -122,7 +184,6 @@ void ModelViewerWidget_Qt3D::clearSourcesOfLight()
         light->deleteLater();
     _sourcesOfLight.clear();
 }
-
 
 ///-------------------------------------------------------------
 /// Отрисовка через Triangles
@@ -154,15 +215,24 @@ void ModelViewerWidget_Qt3D::createVertexAttribute(QGeometry* geometry, Polyhedr
 {
     /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
     Qt3DRender::QAttribute *positionAttribute = new Qt3DRender::QAttribute(geometry);
+    /// Создаем атрибут отображения геометрии (нормали точек в пространстве)
+    Qt3DRender::QAttribute *normalAttribute = new Qt3DRender::QAttribute(geometry);
     /// Добавляем в геометрию объекта наш атрибут
     geometry->addAttribute(positionAttribute);
+    geometry->addAttribute(normalAttribute);
 
     int countPoints = 0;
     QByteArray bufferVertex;
+    int stride = sizeof(Vertex) * 2;
     for(int i = 0; i < polyhedron->size(); ++i)
     {
         Polygon* polygon = polyhedron->polygon(i);
-        int additionSize = polygon->size() * sizeof(Vertex);
+        Plane plane = polygon->plane();
+        Vertex normal;
+        normal.x = plane.A;
+        normal.y = plane.B;
+        normal.z = plane.C;
+        int additionSize = polygon->size() * stride;
         bufferVertex.reserve(bufferVertex.size() + additionSize);
         countPoints += polygon->size();
         if(polygon->isClockwise())
@@ -171,6 +241,7 @@ void ModelViewerWidget_Qt3D::createVertexAttribute(QGeometry* geometry, Polyhedr
             {
                 Vertex tmp = polygon->vertex(j);
                 bufferVertex.append((char*)&tmp, sizeof(Vertex));
+                bufferVertex.append((char*)&normal, sizeof(Vertex));
             }
         }
         else
@@ -179,29 +250,49 @@ void ModelViewerWidget_Qt3D::createVertexAttribute(QGeometry* geometry, Polyhedr
             {
                 Vertex tmp = polygon->vertex(j);
                 bufferVertex.append((char*)&tmp, sizeof(Vertex));
+                bufferVertex.append((char*)&normal, sizeof(Vertex));
             }
         }
     }
 
     /// Создаем буфер, связанный с геометрией объекта
-    Qt3DRender::QBuffer *pointsBuf = new Qt3DRender::QBuffer(geometry);
+    Qt3DRender::QBuffer *buf = new Qt3DRender::QBuffer(geometry);
     /// Передаем в него точки
-    pointsBuf->setData(bufferVertex);
+    buf->setData(bufferVertex);
 
     /// Указываем название атрибута (по умолчанию для позиций точек)
     positionAttribute->setName(QAttribute::defaultPositionAttributeName());
     /// Указываем, какой класс является базовым для Vertex
     positionAttribute->setVertexBaseType(QAttribute::Float);
     /// Указываем число измерений в Vertex
-    positionAttribute->setVertexSize(sizeof(Vertex));
+    positionAttribute->setVertexSize(3);
     /// Указываем, что атрибут отвечает за позиции точек в пространстве
     positionAttribute->setAttributeType(QAttribute::VertexAttribute);
     /// Передаем точки
-    positionAttribute->setBuffer(pointsBuf);
+    positionAttribute->setBuffer(buf);
     /// Указываем, какой интервал между точками
-    positionAttribute->setByteStride(sizeof(Vertex));
+    positionAttribute->setByteStride(stride);
+    /// Указываем сдвиг в байтах в буфере
+    normalAttribute->setByteOffset(0);
     /// Указываем количество точек
     positionAttribute->setCount(countPoints);
+
+    /// Указываем название атрибута (по умолчанию для нормалей точек)
+    normalAttribute->setName(QAttribute::defaultNormalAttributeName());
+    /// Указываем, какой класс является базовым для Vertex
+    normalAttribute->setVertexBaseType(QAttribute::Float);
+    /// Указываем число измерений в Vertex
+    normalAttribute->setVertexSize(3);
+    /// Указываем, что атрибут отвечает за позиции точек в пространстве
+    normalAttribute->setAttributeType(QAttribute::VertexAttribute);
+    /// Передаем точки
+    normalAttribute->setBuffer(buf);
+    /// Указываем, какой интервал между точками
+    normalAttribute->setByteStride(stride);
+    /// Указываем сдвиг в байтах в буфере
+    normalAttribute->setByteOffset(sizeof(Vertex));
+    /// Указываем количество точек
+    normalAttribute->setCount(countPoints);
 }
 
 void ModelViewerWidget_Qt3D::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron)
@@ -244,116 +335,5 @@ void ModelViewerWidget_Qt3D::createIndexesAttribute(QGeometry* geometry, Polyhed
     /// Добавляем в геометрию объекта наш атрибут
     geometry->addAttribute(indexAttribute);
 }
-
-
-
-///-------------------------------------------------------------
-/// Отрисовка через TriangleFan
-///-------------------------------------------------------------
-/*
-void ModelViewerWidget_Qt3D::appendGeomentyRenderer(QEntity* entity, Polyhedron* polyhedron)
-{
-    for(int i = 0; i < polyhedron->size(); ++i)
-    {
-        QGeometryRenderer* geometryRenderer = createGeomentyRenderer(polyhedron->polygon(i));
-        entity->addComponent(geometryRenderer);
-    }
-}
-
-QGeometry* ModelViewerWidget_Qt3D::createGeomenty(Polygon* polygon)
-{
-    QGeometry *result = new Qt3DRender::QGeometry(_rootEntity);
-    appendPositionAttribute(result, polygon);
-    appendIndexesAttribute(result, polygon);
-    return result;
-}
-
-QGeometryRenderer* ModelViewerWidget_Qt3D::createGeomentyRenderer(Polygon* polygon)
-{
-    QGeometryRenderer *result = new QGeometryRenderer(_rootEntity);
-    result->setGeometry(createGeomenty(polygon));
-    result->setPrimitiveType(QGeometryRenderer::TriangleFan);
-    return result;
-}
-
-
-/// TODO добавить нормали
-void ModelViewerWidget_Qt3D::appendPositionAttribute(QGeometry* geometry, Polygon* polygon)
-{
-    QByteArray bufferVertex;
-    bufferVertex.reserve(polygon->size() * sizeof(Vertex));
-    if(polygon->isClockwise())
-    {
-        for(unsigned i = 0; i != polygon->size(); ++i)
-        {
-            Vertex tmp = polygon->vertex(i);
-            bufferVertex.append((char*)&tmp, sizeof(Vertex));
-        }
-    }
-    else
-    {
-        for(unsigned i = polygon->size(); i-- != 0; )
-        {
-            Vertex tmp = polygon->vertex(i);
-            bufferVertex.append((char*)&tmp, sizeof(Vertex));
-        }
-    }
-    /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
-    QAttribute *positionAttribute = new QAttribute(geometry);
-    /// Добавляем в геометрию объекта наш атрибут
-    geometry->addAttribute(positionAttribute);
-    /// Создаем буфер, связанный с геометрией объекта
-    Qt3DRender::QBuffer *pointsBuf = new Qt3DRender::QBuffer(geometry);
-    /// Передаем в него точки
-    pointsBuf->setData(bufferVertex);
-    /// Указываем название атрибута (по умолчанию для позиций точек)
-    positionAttribute->setName(QAttribute::defaultPositionAttributeName());
-    /// Указываем, какой класс является базовым для Vertex
-    positionAttribute->setVertexBaseType(QAttribute::Float);
-    /// Указываем число измерений в Vertex
-    positionAttribute->setVertexSize(sizeof(Vertex));
-    /// Указываем, что атрибут отвечает за позиции точек в пространстве
-    positionAttribute->setAttributeType(QAttribute::VertexAttribute);
-    /// Передаем точки
-    positionAttribute->setBuffer(pointsBuf);
-    /// Указываем, какой интервал между точками
-    positionAttribute->setByteStride(sizeof(Vertex));
-    /// Указываем количество точек
-    positionAttribute->setCount(polygon->size());
-}
-
-void ModelViewerWidget_Qt3D::appendIndexesAttribute(QGeometry* geometry, Polygon* polygon)
-{
-    int countPoints = (polygon->size() - 2) * 2 + 1;
-    /// Буфер, хранящий номера точек
-    QByteArray bufferIndexes;
-    unsigned i = 0;
-    bufferIndexes.reserve(countPoints * sizeof(unsigned short));
-    bufferIndexes.append((char*)&i, sizeof(unsigned short));
-    for(i = 2; i != polygon->size(); ++i)
-    {
-        unsigned tmp = i - 1;
-        bufferIndexes.append((char*)&tmp, sizeof(unsigned short));
-        bufferIndexes.append((char*)&i, sizeof(unsigned short));
-    }
-    /// Создаем буфер, связанный с геометрией объекта
-    Qt3DRender::QBuffer *indexesBuf = new Qt3DRender::QBuffer(geometry);
-    /// Передаем в него точки
-    indexesBuf->setData(bufferIndexes);
-    /// Создаем атрибут отображения геометрии (номера точек)
-    QAttribute *indexAttribute = new QAttribute(geometry);
-    /// Указываем, какой класс является базовым для номеров
-    indexAttribute->setVertexBaseType(QAttribute::UnsignedShort);
-    /// Указываем, что атрибут отвечает за номера точек
-    indexAttribute->setAttributeType(QAttribute::IndexAttribute);
-    /// Передаем точки
-    indexAttribute->setBuffer(indexesBuf);
-    /// Указываем число точек
-    indexAttribute->setCount(countPoints);
-    /// Добавляем в геометрию объекта наш атрибут
-    geometry->addAttribute(indexAttribute);
-}
-
-*/
 
 }

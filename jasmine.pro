@@ -25,6 +25,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
     ModelViewerWidget_Qt3D.cpp \
+    MyOrbitCameraController_Qt3D.cpp \
+    PolyhedronTreeView_Qt3D.cpp \
         mainwindow.cpp \
     ModelViewerWidget.cpp \
     PolyhedronTreeView.cpp
@@ -33,7 +35,9 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     ModelViewerWidget.h \
     ModelViewerWidget_Qt3D.h \
+    MyOrbitCameraController_Qt3D.h \
     PolyhedronTreeView.h \
+    PolyhedronTreeView_Qt3D.h \
     geometry/Halver.h \
     geometry/JMath.h \
     geometry/Plane.h \

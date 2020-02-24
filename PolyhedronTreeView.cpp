@@ -39,29 +39,6 @@ void PolyhedronTreeView::setTree(Tree* _tree)
         model->setItem(i, 1, new QStandardItem(QString("%0").arg(P->volume())));
     }
 
-   /* for( int r=0; r<5; r++ )
-      for( int c=0; c<2; c++)
-      {
-        QStandardItem *item = new QStandardItem( QString("Row:%0, Column:%1").arg(r).arg(c) );
-
-        if( c == 0 )
-          for( int i=0; i<3; i++ )
-          {
-            QStandardItem *child = new QStandardItem( QString("Item %0").arg(i) );
-            //child->setData();
-            child->setEditable( false );
-            child->setChild(0, new QStandardItem("Объём "));
-            child->setChild(1, new QStandardItem("Вершины"));
-            child->setChild(1, 1, new QStandardItem("x"));
-            child->setChild(2, new QStandardItem("Лист2"));
-            item->appendRow( child );
-          }
-
-        model->setItem(r, c, item);
-      }
-
-*/
-
     model->setHorizontalHeaderItem( 0, new QStandardItem( "№" ) );
     model->setHorizontalHeaderItem( 1, new QStandardItem( "Объём/площадь" ) );
     model->setHorizontalHeaderItem( 2, new QStandardItem( "Координаты" ) );
