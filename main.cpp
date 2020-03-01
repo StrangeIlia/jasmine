@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     model_veiwer3.setTree(greenhouse);
     model_veiwer3.container()->show();*/
 
-    bstu::PolyhedronTreeView_Qt3D tree_viewer(box);
+    bstu::PolyhedronTreeView_Qt3D tree_viewer(greenhouse);
     tree_viewer.show();
 
     // Переключение на другое дерево работает нормально, но вряд ли оно где то понадобиться

@@ -74,6 +74,31 @@ ModelViewerWidget_Qt3D::~ModelViewerWidget_Qt3D()
     _selectedObjectMaterial->deleteLater();
 }
 
+inline Vertex centerPolyhedron(Polyhedron* polyhedron)
+{
+    Vertex max, min;
+    max.x = max.y = max.z = std::numeric_limits<float>::min();
+    min.x = min.y = min.z = std::numeric_limits<float>::max();
+    for(int i = 0; i != polyhedron->size(); ++i)
+    {
+        Polygon* polygon = polyhedron->polygon(i);
+        for(unsigned j = 0; j != polygon->size(); ++j)
+        {
+            Vertex tmp = polygon->vertex(j);
+            max.x = std::max(max.x, tmp.x);
+            max.y = std::max(max.y, tmp.y);
+            max.z = std::max(max.z, tmp.z);
+            min.x = std::min(min.x, tmp.x);
+            min.y = std::min(min.y, tmp.y);
+            min.z = std::min(min.z, tmp.z);
+        }
+    }
+    max.x += min.x; max.x /= 2;
+    max.y += min.y; max.y /= 2;
+    max.z += min.z; max.z /= 2;
+    return max;
+}
+
 void ModelViewerWidget_Qt3D::setTree(Tree* tree, bool entitiesEnabled)
 {
     clearEntities();
@@ -85,7 +110,7 @@ void ModelViewerWidget_Qt3D::setTree(Tree* tree, bool entitiesEnabled)
     for (unsigned i = 0; i != tree->polyhedronsCount(); i++)
     {
         Polyhedron* polyhedron = tree->polyhedron(i);
-        Vertex center = polyhedron->center();
+        Vertex center = centerPolyhedron(polyhedron);/*polyhedron->center();*/
         Qt3DCore::QTransform *transform = new Qt3DCore::QTransform();
         transform->setTranslation(QVector3D(-center.x, -center.y, -center.z));
         /// Создаем сущность

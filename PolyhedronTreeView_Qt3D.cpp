@@ -40,7 +40,9 @@ void PolyhedronTreeView_Qt3D::setTree(Tree* tree)
         for (int j=0; j < P->size(); j++)
         {
             Polygon* polygon = P->polygon(j);
-            item->setChild(j, 0, new QStandardItem(QString("Грань %0").arg(j + 1)));
+            QStandardItem *test = new QStandardItem(QString("Грань %0").arg(j + 1));
+            test->setCheckable(true);
+            item->setChild(j, 0, test);
             item->setChild(j, 1, new QStandardItem(QString("%0").arg(polygon->mes())));
             item->setChild(j, 2, new QStandardItem("(x1, y1, z1), (z2, y2, z2), (x3, y3, z3)"));
         }

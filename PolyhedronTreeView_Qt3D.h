@@ -20,6 +20,8 @@ public:
     void setTree(Tree* tree);
 
 private:
+    void setTree(Polyhedron* polyhedron, QStandardItem* item);
+
     void clearModelView();
     static QStandardItemModel* modelPreparation();
 
