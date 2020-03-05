@@ -16,6 +16,7 @@ using namespace Qt3DCore;
 using namespace Qt3DRender;
 using namespace Qt3DExtras;
 
+/// Класс для отображения объектов
 class View3D : public Qt3DWindow
 {
     Q_OBJECT
@@ -31,7 +32,6 @@ public:
     void addComponent(QComponent *comp);
     void removeComponent(QComponent *comp);
 
-    QAbstractCameraController* cameraController();
     void setCameraController(ICameraControllerFactory* factory);
 
     QComponentVector components() const;

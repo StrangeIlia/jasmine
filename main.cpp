@@ -2,10 +2,13 @@
 #include <QApplication>
 #include <stdio.h>
 #include "ModelViewerWidget.h"
-#include "PolyhedronTreeView.h"
 
 #include "ModelViewerWidget_Qt3D.h"
 #include "PolyhedronTreeView_Qt3D.h"
+
+#include "v2/CameraControllerFactory_MyOrbitCamera.h"
+#include "v2/PolyhedronTreeView_v2.h"
+#include "v2/EntityController_Polyhedron.h"
 
 #include <thread>
 
@@ -135,30 +138,41 @@ int main(int argc, char *argv[])
     bstu::Tree* greenhouse = bstu::create_greenhouse(10);
     //greenhouse->restructure();
 
-    /*bstu::ModelViewerWidget model_veiwer;
-    model_veiwer.setTree(greenhouse);
-    model_veiwer.show();*/
+//    bstu::ModelViewerWidget model_veiwer;
+//    model_veiwer.setTree(greenhouse);
+//    model_veiwer.show();
 
-    /*bstu::PolyhedronTreeView tree_viewer;
-    tree_viewer.setTree(greenhouse);
-    tree_viewer.show();
-*/
+//    bstu::PolyhedronTreeView tree_viewer;
+//    tree_viewer.setTree(greenhouse);
+//    tree_viewer.show();
+
     bstu::Tree* box = bstu::create_box();
 
-    /*bstu::ModelViewerWidget model_veiwer2;
-    model_veiwer2.setTree(box);
-    model_veiwer2.show();*/
+//    bstu::ModelViewerWidget model_veiwer2;
+//    model_veiwer2.setTree(box);
+//    model_veiwer2.show();
 
-    /*bstu::ModelViewerWidget_Qt3D model_veiwer3;
-    model_veiwer3.setTree(greenhouse);
-    model_veiwer3.container()->show();*/
+//    bstu::ModelViewerWidget_Qt3D model_veiwer3;
+//    model_veiwer3.setTree(greenhouse);
+//    model_veiwer3.container()->show();
 
-    bstu::PolyhedronTreeView_Qt3D tree_viewer(greenhouse);
-    tree_viewer.show();
+//    bstu::PolyhedronTreeView_Qt3D tree_viewer(greenhouse);
+//    tree_viewer.show();
 
-    // Переключение на другое дерево работает нормально, но вряд ли оно где то понадобиться
-    // std::this_thread::sleep_for(std::chrono::seconds(10));
-    // tree_viewer.setTree(box);
+    bstu::PolyhedronTreeView_v2* tree_view = new bstu::PolyhedronTreeView_v2(box);
+    tree_view->show();
+
+    bstu::CameraControllerFactory_MyOrbitCamera factory;
+    bstu::View3D* view = new bstu::View3D();
+    view->setCameraController(&factory);
+    bstu::EntityController_Polyhedron* controller = new bstu::EntityController_Polyhedron(view);
+    QObject::connect(tree_view, SIGNAL(polyhedronSelected(Polyhedron*)), controller, SLOT(addEntity(Polyhedron*)));
+    QObject::connect(tree_view, SIGNAL(polyhedronUnselected(Polyhedron*)), controller, SLOT(removeEntity(Polyhedron*)));
+    view->container()->show();
+
+//     Переключение на другое дерево работает нормально, но вряд ли оно где то понадобиться
+//     std::this_thread::sleep_for(std::chrono::seconds(10));
+//     tree_viewer.setTree(box);
 
     return a.exec();
 }

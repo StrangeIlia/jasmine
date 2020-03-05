@@ -23,18 +23,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
-SOURCES += main.cpp\
-    ModelViewerWidget_Qt3D.cpp \
-    MyOrbitCameraController_Qt3D.cpp \
-    PolyhedronTreeView_Qt3D.cpp \
-        mainwindow.cpp \
-    ModelViewerWidget.cpp \
-    PolyhedronTreeView.cpp
 
+win32: LIBS += -L$$PWD/lib/ -llib_geometry
 
-HEADERS  += mainwindow.h \
+INCLUDEPATH += $$PWD/geometry
+DEPENDPATH += $$PWD/geometry
+
+LIBS += -lopengl32 -lglu32
+
+DISTFILES += \
+    .qmake.stash \
+    object_script.jasmine
+
+FORMS += \
+    mainwindow.ui
+
+HEADERS += \
     ModelViewerWidget.h \
-    ModelViewerWidget_Qt3D.h \
     MyOrbitCameraController_Qt3D.h \
     PolyhedronTreeView.h \
     PolyhedronTreeView_Qt3D.h \
@@ -49,13 +54,30 @@ HEADERS  += mainwindow.h \
     geometry/Vector.h \
     geometry/Vertex.h \
     geometry/VolumePolygon.h \
-    geometry/lib_geometry_global.h
+    geometry/lib_geometry_global.h \
+    mainwindow.h \
+    modelviewerwidget_qt3d.h \
+    ui_mainwindow.h \
+    v2/CameraControllerFactory_MyOrbitCamera.h \
+    v2/EntityController_Polyhedron.h \
+    v2/GeometryRendererFactory_Polyhedron.h \
+    v2/ICameraControllerFactory.h \
+    v2/IGeometryRendererFactory.h \
+    v2/PolyhedronTreeView_v2.h \
+    v2/View3D.h
 
-FORMS    += mainwindow.ui
-
-win32: LIBS += -L$$PWD/lib/ -llib_geometry
-
-INCLUDEPATH += $$PWD/geometry
-DEPENDPATH += $$PWD/geometry
-
-LIBS += -lopengl32 -lglu32
+SOURCES += \
+    ModelViewerWidget.cpp \
+    MyOrbitCameraController_Qt3D.cpp \
+    PolyhedronTreeView.cpp \
+    PolyhedronTreeView_Qt3D.cpp \
+    main.cpp \
+    mainwindow.cpp \
+    modelviewerwidget_qt3d.cpp \
+    v2/CameraControllerFactory_MyOrbitCamera.cpp \
+    v2/EntityController_Polyhedron.cpp \
+    v2/GeometryRendererFactory_Polyhedron.cpp \
+    v2/ICameraControllerFactory.cpp \
+    v2/IGeometryRendererFactory.cpp \
+    v2/PolyhedronTreeView_v2.cpp \
+    v2/View3D.cpp

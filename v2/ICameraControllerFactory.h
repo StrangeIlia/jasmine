@@ -7,8 +7,6 @@
 
 namespace bstu {
 
-using namespace Qt3DCore;
-using namespace Qt3DRender;
 using namespace Qt3DExtras;
 
 /// Интерфейс для фабрики контроллера камеры
@@ -17,7 +15,8 @@ class ICameraControllerFactory
 public:
     explicit ICameraControllerFactory();
 
-    virtual QAbstractCameraController* createCameraController(QEntity* root) = 0;
+    /// Настраивает камеру и создает для нее контроллер
+    virtual QAbstractCameraController* createCameraController(Qt3DRender::QCamera* camera) const = 0;
 };
 }
 

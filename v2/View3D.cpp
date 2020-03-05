@@ -1,6 +1,6 @@
 #include "View3D.h"
 
-namespace bstu{
+namespace bstu {
 
 
 View3D::View3D(QWidget* parent)
@@ -44,21 +44,12 @@ void View3D::removeComponent(QComponent *comp)
     _rootEntity->removeComponent(comp);
 }
 
-
-QAbstractCameraController* View3D::cameraController()
-{
-    return _cameraController;
-}
-
 void View3D::setCameraController(ICameraControllerFactory* factory)
 {
     if(_cameraController != nullptr)
-    {
-        _cameraController->setParent((QNode*)nullptr);
-        _cameraController->setCamera(nullptr);
         _cameraController->deleteLater();
-    }
-    _cameraController = factory->createCameraController(_rootEntity);
+    _cameraController = factory->createCameraController(camera());
+    _cameraController->setParent(_rootEntity);
 }
 
 QComponentVector View3D::components() const
@@ -72,6 +63,3 @@ template<class T> QVector<T*> View3D::componentsOfType() const
 }
 
 }
-
-
-

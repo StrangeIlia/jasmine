@@ -1,6 +1,15 @@
-#include "IQEntityFactory.h"
+#include "IGeometryRendererFactory.h"
 
-IQEntityFactory::IQEntityFactory()
+namespace bstu {
+IGeometryRendererFactory::IGeometryRendererFactory()
 {
 
 }
+
+IGeometryRendererFactory::~IGeometryRendererFactory()
+{
+
+}
+
+}
+
