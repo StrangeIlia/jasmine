@@ -35,4 +35,8 @@
 /object_script.jasmine
 /jasmine.pro.user
 /object_script.jasmine
-/object_script.jasmine
+/debug
+/.qmake.stash
+/Makefile.Debug
+/object_script.jasmine.Debug
+/object_script.jasmine.Release

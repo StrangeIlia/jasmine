@@ -31,9 +31,7 @@ DEPENDPATH += $$PWD/geometry
 
 LIBS += -lopengl32 -lglu32
 
-DISTFILES += \
-    .qmake.stash \
-    object_script.jasmine
+DISTFILES +=
 
 FORMS += \
     mainwindow.ui
