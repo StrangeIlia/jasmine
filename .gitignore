@@ -40,3 +40,7 @@
 /Makefile.Debug
 /object_script.jasmine.Debug
 /object_script.jasmine.Release
+/ui_mainwindow.h
+/Makefile.Release
+/.qmake.stash
+/object_script.jasmine
