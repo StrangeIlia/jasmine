@@ -31,16 +31,35 @@ DEPENDPATH += $$PWD/geometry
 
 LIBS += -lopengl32 -lglu32
 
-DISTFILES +=
+DISTFILES += \
+    .gitignore
 
 FORMS += \
     mainwindow.ui
 
 HEADERS += \
-    ModelViewerWidget.h \
-    MyOrbitCameraController_Qt3D.h \
+    AbstractEntityMap.hpp \
+    AbstractEntitySet.h \
+    AbstractInitializer.h \
+    CameraAndLightInitalizer.h \
+    EntitiesContainer.h \
+    EntityController.h \
+    GeometryRendererFactory.h \
+    IGeometryRendererFactory.h \
+    MyOrbitCameraController.h \
+    PolyhedronExtension.h \
     PolyhedronTreeView.h \
-    PolyhedronTreeView_Qt3D.h \
+    View3D.h \
+    collections/AbstractEntityMap.hpp \
+    collections/AbstractSet.h \
+    collections/Enumerable.hpp \
+    collections/enumerator/ConditionalEnumerator.hpp \
+    collections/enumerator/Enumerator.hpp \
+    enumerator/ConditionalEnumerator.hpp \
+    enumerator/Enumerable.hpp \
+    enumerator/Enumerator.hpp \
+    exceptions/NotImplementedException.hpp \
+    extensions/PolyhedronExtension.h \
     geometry/Halver.h \
     geometry/JMath.h \
     geometry/Plane.h \
@@ -53,9 +72,13 @@ HEADERS += \
     geometry/Vertex.h \
     geometry/VolumePolygon.h \
     geometry/lib_geometry_global.h \
+    initializers/AbstractViewInitializer.hpp \
+    initializers/CameraAndLightInitalizer.h \
+    iterator/AbstractEnumerator.hpp \
     mainwindow.h \
-    modelviewerwidget_qt3d.h \
     ui_mainwindow.h \
+    utils/Adapter.h \
+    utils/Cleaner.hpp \
     v2/CameraControllerFactory_MyOrbitCamera.h \
     v2/EntityController_Polyhedron.h \
     v2/GeometryRendererFactory_Polyhedron.h \
@@ -65,13 +88,24 @@ HEADERS += \
     v2/View3D.h
 
 SOURCES += \
-    ModelViewerWidget.cpp \
-    MyOrbitCameraController_Qt3D.cpp \
+    AbstractEntityMap.cpp \
+    AbstractEntitySet.cpp \
+    CameraAndLightInitalizer.cpp \
+    EntitiesContainer.cpp \
+    EntityController.cpp \
+    GeometryRendererFactory.cpp \
+    IGeometryRendererFactory.cpp \
+    MyOrbitCameraController.cpp \
+    PolyhedronExtension.cpp \
     PolyhedronTreeView.cpp \
-    PolyhedronTreeView_Qt3D.cpp \
+    View3D.cpp \
+    collections/AbstractEntityMap.cpp \
+    collections/AbstractSet.cpp \
+    extensions/PolyhedronExtension.cpp \
+    initializers/CameraAndLightInitalizer.cpp \
     main.cpp \
     mainwindow.cpp \
-    modelviewerwidget_qt3d.cpp \
+    utils/Adapter.cpp \
     v2/CameraControllerFactory_MyOrbitCamera.cpp \
     v2/EntityController_Polyhedron.cpp \
     v2/GeometryRendererFactory_Polyhedron.cpp \

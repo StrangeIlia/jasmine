@@ -1,4 +1,4 @@
-#include "MyOrbitCameraController_Qt3D.h"
+#include "MyOrbitCameraController.h"
 
 namespace bstu
 {

@@ -1,7 +1,7 @@
-#include "EntityController_Polyhedron.h"
+#include "EntityController.h"
 
 namespace bstu {
-EntityController_Polyhedron::EntityController_Polyhedron(View3D *parent) : QObject(parent)
+EntityController::EntityController(View3D *parent) : QObject(parent)
 {
     View3D *view;
     try {
@@ -11,7 +11,7 @@ EntityController_Polyhedron::EntityController_Polyhedron(View3D *parent) : QObje
     }
     if(parent == nullptr) throw QException();
 
-    factory = new GeometryRendererFactory_Polyhedron();
+    factory = new GeometryRendererFactory();
     material = new QPhongAlphaMaterial();
     transform = new Qt3DCore::QTransform();
     transform->setShareable(true);
@@ -24,14 +24,14 @@ EntityController_Polyhedron::EntityController_Polyhedron(View3D *parent) : QObje
     view->addComponent(transform);
 }
 
-EntityController_Polyhedron::~EntityController_Polyhedron()
+EntityController::~EntityController()
 {
     delete factory;
 //    material->deleteLater(); //Мы передали контроль за компонентами view
 //    transform->deleteLater();
 }
 
-void EntityController_Polyhedron::addEntity(Polyhedron* polyhedron)
+void EntityController::addEntity(Polyhedron* polyhedron)
 {
     if(!activePolyhedrons.contains(polyhedron))
     {
@@ -57,7 +57,7 @@ void EntityController_Polyhedron::addEntity(Polyhedron* polyhedron)
 }
 
 /// TODO исправить ошибку с компонентами
-void EntityController_Polyhedron::removeEntity(Polyhedron* polyhedron)
+void EntityController::removeEntity(Polyhedron* polyhedron)
 {
     auto iter = activePolyhedrons.find(polyhedron);
     if(iter != activePolyhedrons.end())
@@ -72,7 +72,7 @@ void EntityController_Polyhedron::removeEntity(Polyhedron* polyhedron)
     }
 }
 
-bool EntityController_Polyhedron::hasParrent(Polyhedron* polyhedron)
+bool EntityController::hasParrent(Polyhedron* polyhedron)
 {
     for(auto iter = activePolyhedrons.begin(); iter != activePolyhedrons.end(); ++iter)
     {
@@ -82,7 +82,7 @@ bool EntityController_Polyhedron::hasParrent(Polyhedron* polyhedron)
     return false;
 }
 
-bool EntityController_Polyhedron::hasParrent(Polyhedron* parent, Polyhedron* polyhedron)
+bool EntityController::hasParrent(Polyhedron* parent, Polyhedron* polyhedron)
 {
     bool result = false;
     if(parent->isHalve())
@@ -100,7 +100,7 @@ bool EntityController_Polyhedron::hasParrent(Polyhedron* parent, Polyhedron* pol
     return result;
 }
 
-void EntityController_Polyhedron::changeStateChilds(Polyhedron* polyhedron, bool state)
+void EntityController::changeStateChilds(Polyhedron* polyhedron, bool state)
 {
     QQueue<Polyhedron*> polyhedrons;
     if(polyhedron->isHalve())
@@ -122,7 +122,7 @@ void EntityController_Polyhedron::changeStateChilds(Polyhedron* polyhedron, bool
     }
 }
 
-void EntityController_Polyhedron::minMaxPointsInit()
+void EntityController::minMaxPointsInit()
 {
     min_x.polyhedron = min_y.polyhedron = min_z.polyhedron = nullptr;
     max_x.polyhedron = max_y.polyhedron = max_z.polyhedron = nullptr;
@@ -130,7 +130,7 @@ void EntityController_Polyhedron::minMaxPointsInit()
     max_x.value = max_y.value = max_z.value = -std::numeric_limits<float>::max();
 }
 
-void EntityController_Polyhedron::centeringOnAppend(Polyhedron* polyhedron)
+void EntityController::centeringOnAppend(Polyhedron* polyhedron)
 {
     bool isChanged = false;
     for(int i = 0; i != polyhedron->size(); ++i)
@@ -173,7 +173,7 @@ void EntityController_Polyhedron::centeringOnAppend(Polyhedron* polyhedron)
     if(isChanged) changeTransform();
 }
 
-void EntityController_Polyhedron::centeringOnDelete(Polyhedron* polyhedron)
+void EntityController::centeringOnDelete(Polyhedron* polyhedron)
 {
     if(activePolyhedrons.count() == 0) return;
     bool isChanged = false;
@@ -312,7 +312,7 @@ void EntityController_Polyhedron::centeringOnDelete(Polyhedron* polyhedron)
     if(isChanged) changeTransform();
 }
 
-void EntityController_Polyhedron::changeTransform()
+void EntityController::changeTransform()
 {
     float aveg_x = (max_x.value + min_x.value) / 4; //WHAT? не понимаю, почему не / 2, но так оно центрует
     float aveg_y = (max_y.value + min_y.value) / 4;

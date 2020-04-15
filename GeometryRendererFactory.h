@@ -17,10 +17,10 @@ using namespace Qt3DExtras;
 
 /// Класс отвечает за создание геометрии сущности на основе полихедрона (дочерние полихедроны игнорируются)
 /// Созданный QGeometryRenderer не привязан к какому - то rootEntity
-class GeometryRendererFactory_Polyhedron : public IGeometryRendererFactory
+class GeometryRendererFactory : public IGeometryRendererFactory
 {
 public:
-    explicit GeometryRendererFactory_Polyhedron(Polyhedron* polyhedron = nullptr);
+    explicit GeometryRendererFactory(Polyhedron* polyhedron = nullptr);
 
     void setPolyhedron(Polyhedron* polyhedron);
     virtual QGeometryRenderer* createGeometryRenderer() const;

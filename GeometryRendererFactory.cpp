@@ -1,24 +1,24 @@
-#include "GeometryRendererFactory_Polyhedron.h"
+#include "GeometryRendererFactory.h"
 
 namespace bstu {
 
-GeometryRendererFactory_Polyhedron::GeometryRendererFactory_Polyhedron(Polyhedron* polyhedron)
+GeometryRendererFactory::GeometryRendererFactory(Polyhedron* polyhedron)
 {
     setPolyhedron(polyhedron);
 }
 
-void GeometryRendererFactory_Polyhedron::setPolyhedron(Polyhedron* polyhedron)
+void GeometryRendererFactory::setPolyhedron(Polyhedron* polyhedron)
 {
     pattern = polyhedron;
 }
 
-QGeometryRenderer* GeometryRendererFactory_Polyhedron::createGeometryRenderer() const
+QGeometryRenderer* GeometryRendererFactory::createGeometryRenderer() const
 {
     if(pattern == nullptr) return nullptr;
     return createGeomentyRenderer(pattern);
 }
 
-QGeometry* GeometryRendererFactory_Polyhedron::createGeomenty(Polyhedron* polyhedron)
+QGeometry* GeometryRendererFactory::createGeomenty(Polyhedron* polyhedron)
 {
     QGeometry *result = new Qt3DRender::QGeometry();
     createVertexAttribute(result, polyhedron);
@@ -26,7 +26,7 @@ QGeometry* GeometryRendererFactory_Polyhedron::createGeomenty(Polyhedron* polyhe
     return result;
 }
 
-QGeometryRenderer* GeometryRendererFactory_Polyhedron::createGeomentyRenderer(Polyhedron* polyhedron)
+QGeometryRenderer* GeometryRendererFactory::createGeomentyRenderer(Polyhedron* polyhedron)
 {
     QGeometryRenderer *result = new QGeometryRenderer();
     result->setGeometry(createGeomenty(polyhedron));
@@ -34,7 +34,7 @@ QGeometryRenderer* GeometryRendererFactory_Polyhedron::createGeomentyRenderer(Po
     return result;
 }
 
-void GeometryRendererFactory_Polyhedron::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron)
+void GeometryRendererFactory::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron)
 {
     /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
     Qt3DRender::QAttribute *positionAttribute = new Qt3DRender::QAttribute(geometry);
@@ -118,7 +118,7 @@ void GeometryRendererFactory_Polyhedron::createVertexAttribute(QGeometry* geomet
     normalAttribute->setCount(countPoints);
 }
 
-void GeometryRendererFactory_Polyhedron::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron)
+void GeometryRendererFactory::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron)
 {
     int index = 0;
     int countPoints = 0;

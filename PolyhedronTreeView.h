@@ -1,42 +1,37 @@
 #ifndef POLYHEDRONTREEVIEW_H
 #define POLYHEDRONTREEVIEW_H
-#include <QTreeView>
-#include <QDebug>
-#include <QMouseEvent>
+
 #include "geometry/Tree.h"
+#include "AbstractEntitySet.h"
+
+#include <QSet>
+#include <QTreeView>
+#include <QStandardItem>
 
 namespace bstu {
 
 class PolyhedronTreeView : public QTreeView
 {
-    Tree* tree;
+    Q_OBJECT
 public:
+    explicit PolyhedronTreeView(AbstractEntitySet *set, QWidget *parrent = nullptr, Tree* tree = nullptr);
+    ~PolyhedronTreeView();
 
     void setTree(Tree* tree);
+signals:
+    void polyhedronSelected(PolyhedronExtension*);
+    void polyhedronUnselected(PolyhedronExtension*);
 
-    PolyhedronTreeView();
-
-    virtual void mousePressEvent(QMouseEvent *event)
-    {
-        QModelIndex index = indexAt(event->pos());
-        QString text = index.data(Qt::DisplayRole).toString();
-        qDebug() << index.row()  << " " << index.column() << " " << text;
-        QTreeView::mousePressEvent(event);
-            /*
-            bool selected = selectionModel()->isSelected(indexAt(event->pos()));
-            QTreeView::mousePressEvent(event);
-            if ((item.row() == -1 && item.column() == -1) || selected)
-            {
-                clearSelection();
-                const QModelIndex index;
-                selectionModel()->setCurrentIndex(index, QItemSelectionModel::Select);
-            }*/
-    }
+private slots:
+    void clickProcessing(QStandardItem* item);
+    void fillProcessing(const QModelIndex& index);
+    void clearProcessing(const QModelIndex& index);
+private:
+    void appendData(QStandardItem* item, PolyhedronExtension* polyhedron);
+    AbstractEntitySet *activePolyhedrons;
 };
 
+}
 
-} // namespace bstu
 
 #endif // POLYHEDRONTREEVIEW_H
-
-

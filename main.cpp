@@ -1,14 +1,9 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <stdio.h>
-#include "ModelViewerWidget.h"
-
-#include "ModelViewerWidget_Qt3D.h"
-#include "PolyhedronTreeView_Qt3D.h"
-
-#include "v2/CameraControllerFactory_MyOrbitCamera.h"
-#include "v2/PolyhedronTreeView_v2.h"
-#include "v2/EntityController_Polyhedron.h"
+#include "CameraControllerFactory_MyOrbitCamera.h"
+#include "PolyhedronTreeView.h"
+#include "EntityController.h"
 
 #include <thread>
 
@@ -28,24 +23,14 @@ int main(int argc, char *argv[])
 
     bstu::Tree* box = bstu::create_box();
 
-    bstu::PolyhedronTreeView_v2* tree_view = new bstu::PolyhedronTreeView_v2(greenhouse);
+    bstu::PolyhedronTreeView* tree_view = new bstu::PolyhedronTreeView(greenhouse);
     bstu::CameraControllerFactory_MyOrbitCamera factory;
     bstu::View3D* view = new bstu::View3D();
-    view->setCameraController(&factory);
-    bstu::EntityController_Polyhedron* controller = new bstu::EntityController_Polyhedron(view);
+    bstu::EntityController* controller = new bstu::EntityController(view);
     QObject::connect(tree_view, SIGNAL(polyhedronSelected(Polyhedron*)), controller, SLOT(addEntity(Polyhedron*)));
     QObject::connect(tree_view, SIGNAL(polyhedronUnselected(Polyhedron*)), controller, SLOT(removeEntity(Polyhedron*)));
 
-//    /// Настраиваем освещение
-//    Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity();
-//    Qt3DRender::QPointLight *light = new Qt3DRender::QPointLight(lightEntity);
-//    light->setColor("white");
-//    light->setIntensity(1);
-//    lightEntity->addComponent(light);
-//    /// Задаем позицию источника света как отдельное свойство
-//    /// Прикрепляем позицию источника света к позиции камеры
-//    Qt3DCore::QTransform *lightTransform = view->->componentsOfType<Qt3DCore::QTransform>().first();
-//    lightEntity->addComponent(lightTransform);
+
 
     tree_view->show();
     view->container()->show();

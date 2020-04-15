@@ -5,15 +5,14 @@
 #include <QQueue>
 #include <QObject>
 
-
 #include <limits>
 
 
 #include "View3D.h"
-#include "GeometryRendererFactory_Polyhedron.h"
+#include "GeometryRendererFactory.h"
 
 
-#include "../geometry/Polyhedron.h"
+#include "geometry/Polyhedron.h"
 
 
 namespace bstu {
@@ -22,12 +21,12 @@ using namespace Qt3DCore;
 using namespace Qt3DExtras;
 
 /// Класс отвечает за добавление/удаление/отображение сущностей на сцене
-class EntityController_Polyhedron : public QObject
+class EntityController : public QObject
 {
     Q_OBJECT
 public:
-    explicit EntityController_Polyhedron(View3D *parent);
-    ~EntityController_Polyhedron();
+    explicit EntityController(View3D *parent);
+    ~EntityController();
 
 signals:
 
@@ -47,7 +46,7 @@ private:
     QEntity* surrogateObject;
     QPhongAlphaMaterial* material;
     Qt3DCore::QTransform* transform;
-    GeometryRendererFactory_Polyhedron* factory;
+    GeometryRendererFactory* factory;
     QHash<Polyhedron*, QEntity*> activePolyhedrons;
 
 
