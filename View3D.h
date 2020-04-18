@@ -8,8 +8,6 @@
 #include <Qt3DExtras>
 #include <Qt3DRender>
 
-#include "ICameraControllerFactory.h"
-
 namespace bstu {
 
 using namespace Qt3DCore;

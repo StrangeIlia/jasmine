@@ -9,6 +9,7 @@ Adapter::Adapter(View3D* view, AbstractSet<QEntity>* set) : QObject(view) {
 }
 
 void Adapter::addEntity(QEntity* entity) {
+    entity->moveToThread(view->thread());
     entity->setParent(view->rootEntity());
 }
 

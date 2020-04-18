@@ -19,6 +19,7 @@ class AbstractEntityMap : public QObject, public AbstractEnumerable<EntityPair> 
     Q_OBJECT
 public:
     explicit AbstractEntityMap(QObject *parrent = nullptr);
+    virtual int count() const = 0;
     virtual bool hasValue(QEntity* value) const = 0;
     virtual bool hasKey(PolyhedronExtension* key) const = 0;
     virtual QEntity* get(PolyhedronExtension* key) const = 0;
@@ -27,6 +28,8 @@ public:
 public slots:
     /// Возращает истина, если такого ключа не было в коллекции
     bool append(PolyhedronExtension* key, QEntity* value);
+    /// Возращает истина, если удалось изменить значение по ключу
+    bool change(PolyhedronExtension* key, QEntity* value);
     /// Возвращает истина, если ключ был в коллекции
     bool remove(PolyhedronExtension* key);
 signals:
@@ -34,7 +37,8 @@ signals:
     void removed(EntityPair pair);
     void changed(EntityPair oldPair, QEntity* newEntity);
 protected:
-    virtual bool _mapAppend(PolyhedronExtension* key, QEntity* value) = 0;
+    virtual bool _mapAppend(PolyhedronExtension* key, QEntity* newValue, QEntity*& oldValue) = 0;
+    virtual bool _mapChange(PolyhedronExtension* key, QEntity* newValue, QEntity*& oldValue) = 0;
     virtual bool _mapRemove(PolyhedronExtension* key) = 0;
 };
 }

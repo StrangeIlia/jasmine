@@ -8,12 +8,19 @@ EntitiesContainer::EntitiesContainer(QObject *parrent) :
 
 }
 
+int EntitiesContainer::count() const {
+    return container.count();
+}
+
 /// Виртуальные методы множества многогранников
 bool EntitiesContainer::has(PolyhedronExtension* polyhedron) {
     return container.find(polyhedron) != container.end();
 }
 
 bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.lock();
+#endif
     EntityPair pair;
     pair.key = nullptr;
     pair.value = nullptr;
@@ -23,21 +30,36 @@ bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
         pair.value = iterator.value();
         if(pair.value != nullptr)
             emit AbstractSet<QEntity>::removed(iterator.value());
+        else {
+#if PARALLEL_CONTAINER_HANDLING
+            mutex.unlock();
+#endif
+            return false;
+        }
     }
     container.insert(polyhedron, nullptr);
     if(pair.key == nullptr) {
         emit AbstractEntityMap::appended(pair);
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return true;
     }
     else {
         if(pair.value != nullptr) {
             emit AbstractEntityMap::changed(pair, nullptr);
         }
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return false;
     }
 }
 
 bool EntitiesContainer::_setRemove(PolyhedronExtension* polyhedron) {
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.lock();
+#endif
     auto iterator = container.find(polyhedron);
     if(iterator != container.end()) {
         EntityPair pair;
@@ -46,8 +68,14 @@ bool EntitiesContainer::_setRemove(PolyhedronExtension* polyhedron) {
         container.remove(polyhedron);
         emit AbstractSet<QEntity>::removed(pair.value);
         emit AbstractEntityMap::removed(pair);
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return true;
     }
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.unlock();
+#endif
     return false;
 }
 
@@ -62,6 +90,9 @@ bool EntitiesContainer::_setAppend(QEntity*) {
 }
 
 bool EntitiesContainer::_setRemove(QEntity* entity) {
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.lock();
+#endif
     auto key = container.key(entity);
     auto iterator = container.find(key);
     if(iterator != container.end()) {
@@ -71,8 +102,14 @@ bool EntitiesContainer::_setRemove(QEntity* entity) {
         container.remove(key);
         emit AbstractSet<PolyhedronExtension>::removed(pair.key);
         emit AbstractEntityMap::removed(pair);
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return true;
     }
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.unlock();
+#endif
     return false;
 }
 
@@ -194,32 +231,72 @@ Enumerable<EntityPair> EntitiesContainer::childs(PolyhedronExtension* key) const
     return Enumerable<EntityPair>(new ChildsEnumerable(container, key));
 }
 
-bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value) {
-    EntityPair pair;
-    pair.key = nullptr;
-    pair.value = nullptr;
+bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) {
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.lock();
+#endif
+    PolyhedronExtension* oldKey = nullptr;
     auto iterator = container.find(key);
     if(iterator != container.end()) {
-        pair.key = iterator.key();
-        pair.value = iterator.value();
-        if(pair.value != value)
-            emit AbstractSet<QEntity>::removed(pair.value);
+        oldKey = iterator.key();
+        oldValue = iterator.value();
+        if(oldValue != value)
+            emit AbstractSet<QEntity>::removed(oldValue);
+        else {
+#if PARALLEL_CONTAINER_HANDLING
+            mutex.unlock();
+#endif
+            return false;
+        }
     }
     container.insert(key, value);
-    if(pair.key == nullptr) {
-        emit AbstractSet<PolyhedronExtension>::appended(pair.key);
-        emit AbstractSet<QEntity>::appended(pair.value);
+    if(oldKey == nullptr) {
+        emit AbstractSet<PolyhedronExtension>::appended(key);
+        emit AbstractSet<QEntity>::appended(value);
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return true;
     }
     else {
-        if(pair.value != value) {
-            emit AbstractSet<QEntity>::appended(pair.value);
+        if(oldValue != value) {
+            emit AbstractSet<QEntity>::appended(value);
         }
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return false;
     }
 }
 
+bool EntitiesContainer::_mapChange(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) {
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.lock();
+#endif
+    auto iterator = container.find(key);
+    if(iterator == container.end()) {
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
+        return false;
+    }
+    oldValue = iterator.value();
+    if(oldValue == value) {
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
+        return false;
+    }
+    emit AbstractSet<QEntity>::removed(oldValue);
+    container.insert(key, value);
+    emit AbstractSet<QEntity>::appended(value);
+    return true;
+}
+
 bool EntitiesContainer::_mapRemove(PolyhedronExtension* key) {
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.lock();
+#endif
     auto iterator = container.find(key);
     if(iterator != container.end()) {
         EntityPair pair;
@@ -228,8 +305,14 @@ bool EntitiesContainer::_mapRemove(PolyhedronExtension* key) {
         container.remove(key);
         emit AbstractSet<PolyhedronExtension>::removed(pair.key);
         emit AbstractSet<QEntity>::removed(pair.value);
+#if PARALLEL_CONTAINER_HANDLING
+        mutex.unlock();
+#endif
         return true;
     }
+#if PARALLEL_CONTAINER_HANDLING
+    mutex.unlock();
+#endif
     return false;
 }
 

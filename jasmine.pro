@@ -44,8 +44,6 @@ HEADERS += \
     CameraAndLightInitalizer.h \
     EntitiesContainer.h \
     EntityController.h \
-    GeometryRendererFactory.h \
-    IGeometryRendererFactory.h \
     MyOrbitCameraController.h \
     PolyhedronExtension.h \
     PolyhedronTreeView.h \
@@ -53,6 +51,7 @@ HEADERS += \
     collections/AbstractEntityMap.hpp \
     collections/AbstractSet.h \
     collections/Enumerable.hpp \
+    collections/TransformsSet.h \
     collections/enumerator/ConditionalEnumerator.hpp \
     collections/enumerator/Enumerator.hpp \
     enumerator/ConditionalEnumerator.hpp \
@@ -77,8 +76,21 @@ HEADERS += \
     iterator/AbstractEnumerator.hpp \
     mainwindow.h \
     ui_mainwindow.h \
+    utils/AbstractGeometryFactory.hpp \
+    utils/AbstractLockable.h \
+    utils/AbstractMaterialFactory.hpp \
     utils/Adapter.h \
+    utils/Centering.hpp \
     utils/Cleaner.hpp \
+    utils/EntityConstructor.h \
+    utils/SimpleGeometryFactory.h \
+    utils/SimpleMaterialFactory.h \
+    utils/factories/AbstractGeometryFactory.hpp \
+    utils/factories/AbstractMaterialFactory.hpp \
+    utils/factories/AbstractTransformFactory.hpp \
+    utils/factories/imp/SimpleGeometryFactory.h \
+    utils/factories/imp/SimpleMaterialFactory.h \
+    utils/factories/imp/SimpleTransformFactory.h \
     v2/CameraControllerFactory_MyOrbitCamera.h \
     v2/EntityController_Polyhedron.h \
     v2/GeometryRendererFactory_Polyhedron.h \
@@ -93,19 +105,25 @@ SOURCES += \
     CameraAndLightInitalizer.cpp \
     EntitiesContainer.cpp \
     EntityController.cpp \
-    GeometryRendererFactory.cpp \
-    IGeometryRendererFactory.cpp \
     MyOrbitCameraController.cpp \
     PolyhedronExtension.cpp \
     PolyhedronTreeView.cpp \
     View3D.cpp \
     collections/AbstractEntityMap.cpp \
     collections/AbstractSet.cpp \
+    collections/TransformsSet.cpp \
     extensions/PolyhedronExtension.cpp \
     initializers/CameraAndLightInitalizer.cpp \
     main.cpp \
     mainwindow.cpp \
     utils/Adapter.cpp \
+    utils/Centering.cpp \
+    utils/EntityConstructor.cpp \
+    utils/SimpleGeometryFactory.cpp \
+    utils/SimpleMaterialFactory.cpp \
+    utils/factories/imp/SimpleGeometryFactory.cpp \
+    utils/factories/imp/SimpleMaterialFactory.cpp \
+    utils/factories/imp/SimpleTransformFactory.cpp \
     v2/CameraControllerFactory_MyOrbitCamera.cpp \
     v2/EntityController_Polyhedron.cpp \
     v2/GeometryRendererFactory_Polyhedron.cpp \

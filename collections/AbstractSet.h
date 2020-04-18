@@ -12,6 +12,7 @@ class AbstractSet : public QObject {
 public:
     explicit AbstractSet(QObject *parrent = nullptr);
     virtual bool has(T* key) = 0;
+    virtual int count() const = 0;
 public slots:
     /// Возращает истина, если такого ключа не было в коллекции
     bool append(T* key);

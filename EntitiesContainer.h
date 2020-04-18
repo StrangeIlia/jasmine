@@ -6,6 +6,9 @@
 #include "exceptions/NotImplementedException.hpp"
 
 #include <QHash>
+#include <QMutex>
+
+#define PARALLEL_CONTAINER_HANDLING 0
 
 namespace bstu {
 
@@ -17,6 +20,8 @@ class EntitiesContainer : public AbstractSet<PolyhedronExtension>,
 public:
     explicit EntitiesContainer(QObject* parrent);
 private:
+    int count() const override;
+
     /// Виртуальные методы множества многогранников
     bool has(PolyhedronExtension* polyhedron) override;
     bool _setAppend(PolyhedronExtension* polyhedron) override;
@@ -32,8 +37,13 @@ private:
     Enumerator<EntityPair> getEnumerator() const override;
     EntityPair parrent(PolyhedronExtension* key) const override;
     Enumerable<EntityPair> childs(PolyhedronExtension* key) const override;
-    bool _mapAppend(PolyhedronExtension* key, QEntity* value) override;
+    bool _mapAppend(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) override;
+    bool _mapChange(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) override;
     bool _mapRemove(PolyhedronExtension* key) override;
+#if PARALLEL_CONTAINER_HANDLING
+    /// Для параллельной обработки
+    QMutex mutex;
+#endif
     /// Контейнер всех данных
     QHash<PolyhedronExtension*, QEntity*> container;
 };

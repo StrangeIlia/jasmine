@@ -1,41 +1,18 @@
-#include "GeometryRendererFactory.h"
+#include "SimpleGeometryFactory.h"
 
 namespace bstu {
 
-GeometryRendererFactory::GeometryRendererFactory(Polyhedron* polyhedron)
-{
-    setPolyhedron(polyhedron);
+QGeometryRenderer* SimpleGeometryFactory::create(Polyhedron* polyhedron) {
+    QGeometry *geometry = new Qt3DRender::QGeometry();
+    createVertexAttribute(geometry, polyhedron);
+    createIndexesAttribute(geometry, polyhedron);
+    QGeometryRenderer *renderer = new QGeometryRenderer();
+    renderer->setGeometry(geometry);
+    renderer->setPrimitiveType(QGeometryRenderer::Triangles);
+    return renderer;
 }
 
-void GeometryRendererFactory::setPolyhedron(Polyhedron* polyhedron)
-{
-    pattern = polyhedron;
-}
-
-QGeometryRenderer* GeometryRendererFactory::createGeometryRenderer() const
-{
-    if(pattern == nullptr) return nullptr;
-    return createGeomentyRenderer(pattern);
-}
-
-QGeometry* GeometryRendererFactory::createGeomenty(Polyhedron* polyhedron)
-{
-    QGeometry *result = new Qt3DRender::QGeometry();
-    createVertexAttribute(result, polyhedron);
-    createIndexesAttribute(result, polyhedron);
-    return result;
-}
-
-QGeometryRenderer* GeometryRendererFactory::createGeomentyRenderer(Polyhedron* polyhedron)
-{
-    QGeometryRenderer *result = new QGeometryRenderer();
-    result->setGeometry(createGeomenty(polyhedron));
-    result->setPrimitiveType(QGeometryRenderer::Triangles);
-    return result;
-}
-
-void GeometryRendererFactory::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron)
-{
+void SimpleGeometryFactory::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
     /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
     Qt3DRender::QAttribute *positionAttribute = new Qt3DRender::QAttribute(geometry);
     /// Создаем атрибут отображения геометрии (нормали точек в пространстве)
@@ -118,8 +95,7 @@ void GeometryRendererFactory::createVertexAttribute(QGeometry* geometry, Polyhed
     normalAttribute->setCount(countPoints);
 }
 
-void GeometryRendererFactory::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron)
-{
+void SimpleGeometryFactory::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
     int index = 0;
     int countPoints = 0;
     /// Буфер, хранящий номера точек
@@ -158,6 +134,5 @@ void GeometryRendererFactory::createIndexesAttribute(QGeometry* geometry, Polyhe
     /// Добавляем в геометрию объекта наш атрибут
     geometry->addAttribute(indexAttribute);
 }
-
 }
 
