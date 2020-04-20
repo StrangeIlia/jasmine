@@ -20,7 +20,7 @@ typedef KeyValuePair<PolyhedronExtension*, QEntity*> EntityPair;
 class AbstractEntityMap : public QObject, public AbstractEnumerable<EntityPair> {
     Q_OBJECT
 public:
-    explicit AbstractEntityMap(QObject *parrent = nullptr);
+    explicit AbstractEntityMap(QObject *parent = nullptr);
     virtual int count() const {
         throw NotImplementedException();
     }
@@ -33,7 +33,7 @@ public:
     virtual QEntity* get(PolyhedronExtension* ) const {
         throw NotImplementedException();
     }
-    virtual EntityPair parrent(PolyhedronExtension* ) const {
+    virtual EntityPair parent(PolyhedronExtension* ) const {
         throw NotImplementedException();
     }
     virtual Enumerable<EntityPair> childs(PolyhedronExtension* ) const {

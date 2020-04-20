@@ -12,7 +12,7 @@ class Centering : QObject
 {
     Q_OBJECT
 public:
-    Centering(AbstractEntityMap* map, Enumerable<Qt3DCore::QTransform*> set);
+    Centering(AbstractEntityMap* map, AbstractEnumerable<Qt3DCore::QTransform*>* set);
 private slots:
     void appended(EntityPair pair);
     void changed(EntityPair oldPair, QEntity* newEntity);
@@ -34,7 +34,7 @@ private:
 
     static Vector minus(const Vector& x, const Vector& y);
 
-    Enumerable<Qt3DCore::QTransform*> set;
+    AbstractEnumerable<Qt3DCore::QTransform*>* set;
     AbstractEntityMap* map;
     Vertex minVector, maxVector;
     PolyhedronPair minPol, maxPol;

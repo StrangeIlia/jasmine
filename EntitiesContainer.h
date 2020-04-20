@@ -19,7 +19,7 @@ class EntitiesContainer : public AbstractPolyhedronSet,
                           public AbstractEntityMap
 {
 public:
-    explicit EntitiesContainer(QObject* parrent = nullptr);
+    explicit EntitiesContainer(QObject* parent = nullptr);
 private:
     int count() const override;
 
@@ -36,7 +36,7 @@ private:
     bool hasKey(PolyhedronExtension* key) const override;
     QEntity* get(PolyhedronExtension* key) const override;
     Enumerator<EntityPair> getEnumerator() const override;
-    EntityPair parrent(PolyhedronExtension* key) const override;
+    EntityPair parent(PolyhedronExtension* key) const override;
     Enumerable<EntityPair> childs(PolyhedronExtension* key) const override;
     bool _mapAppend(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) override;
     bool _mapChange(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) override;

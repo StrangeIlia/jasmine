@@ -1,11 +1,11 @@
 #include "Centering.hpp"
 
 namespace bstu{
-Centering::Centering(AbstractEntityMap* map, Enumerable<Qt3DCore::QTransform*> _set) : QObject(map), set(_set)
+Centering::Centering(AbstractEntityMap* map, AbstractEnumerable<Qt3DCore::QTransform*>* _set) : QObject(map), set(_set)
 {
     this->map = map;
     connect(map, SIGNAL(appended(EntityPair)), SLOT(appended(EntityPair)));
-    connect(map, SIGNAL(changed(EntityPair, QEntity*)), SLOT(appended(EntityPair, QEntity*)));
+    connect(map, SIGNAL(changed(EntityPair, QEntity*)), SLOT(changed(EntityPair, QEntity*)));
     connect(map, SIGNAL(removed(EntityPair)), SLOT(removed(EntityPair)));
 }
 
@@ -43,13 +43,17 @@ void Centering::appended(EntityPair pair) {
     }
     if(changePosition) {
         Vector newCenter = (minVector + maxVector) / 2;
-        changePositions(minus(newCenter, oldCenter));
+        changePositions(minus(oldCenter, newCenter));
     }
 }
 
 void Centering::changed(EntityPair oldPair, QEntity* newEntity) {
-    if(newEntity != nullptr)
+    if(oldPair.value != nullptr)
+        removed(oldPair);
+    if(newEntity != nullptr) {
+        oldPair.value = newEntity;
         appended(oldPair);
+    }
 }
 
 void Centering::removed(EntityPair pair) {
@@ -89,7 +93,7 @@ void Centering::removed(EntityPair pair) {
         }
     }
     Vector newCenter = (minVector + maxVector) / 2;
-    changePositions(minus(newCenter, oldCenter));
+    changePositions(minus(oldCenter, newCenter));
 }
 
 void Centering::initVectors() {
@@ -109,15 +113,15 @@ void Centering::changePositions(Vector dVector) {
 
 Centering::BoolPair Centering::minmax(Vertex& a, Vertex& b) {
     BoolPair result;
-    if(a.x < b.x) {
+    if(a.x > b.x) {
         result.x = true;
         std::swap(a.x, b.x);
     }
-    if(a.y < b.y) {
+    if(a.y > b.y) {
         result.y = true;
         std::swap(a.y, b.y);
     }
-    if(a.z < b.z) {
+    if(a.z > b.z) {
         result.z = true;
         std::swap(a.z, b.z);
     }
@@ -128,7 +132,7 @@ Vector Centering::minus(const Vector& x, const Vector& y) {
     Vector result = x;
     result.x -= y.x;
     result.y -= y.y;
-    result.z -= result.z;
+    result.z -= y.z;
     return result;
 }
 

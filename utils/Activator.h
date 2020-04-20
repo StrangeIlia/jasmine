@@ -13,7 +13,7 @@ public:
     explicit Activator(AbstractEntityMap* map);
 private slots:
     void append(EntityPair pair);
-    void append(EntityPair pair, QEntity* newEntity);
+    void changed(EntityPair pair, QEntity* newEntity);
     void remove(EntityPair pair);
 private:
     AbstractEntityMap* map;

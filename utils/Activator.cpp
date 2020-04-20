@@ -4,22 +4,25 @@ namespace bstu {
 Activator::Activator(AbstractEntityMap* map) : QObject(map)
 {
     this->map = map;
-    connect(map, SIGNAL(append(EntityPair)), this, SLOT(append(EntityPair)));
-    connect(map, SIGNAL(changed(EntityPair, QEntity*)), this, SLOT(append(EntityPair, QEntity*)));
-    connect(map, SIGNAL(remove(EntityPair)), this, SLOT(remove(EntityPair)));
+    connect(map, SIGNAL(appended(EntityPair)), this, SLOT(append(EntityPair)));
+    connect(map, SIGNAL(changed(EntityPair, QEntity*)), this, SLOT(changed(EntityPair, QEntity*)));
+    connect(map, SIGNAL(removed(EntityPair)), this, SLOT(remove(EntityPair)));
 }
 
 void Activator::append(EntityPair pair) {
     if(pair.key == nullptr || pair.value == nullptr) return;
-    Enumerator<EntityPair> parent = map->childs(pair.key)->getEnumerator();
-    if(!parent->moveNext()) return;
+    EntityPair parent = map->parent(pair.key);
+    if(parent.key != nullptr) {
+        pair.value->setEnabled(false);
+        return;
+    }
     Enumerator<EntityPair> childs = map->childs(pair.key)->getEnumerator();
     while(childs->moveNext()) {
         childs->current().value->setEnabled(false);
     }
 }
 
-void Activator::append(EntityPair pair, QEntity* newEntity) {
+void Activator::changed(EntityPair pair, QEntity* newEntity) {
     if(newEntity == nullptr || pair.key == nullptr) return;
     if(pair.value != nullptr) remove(pair);
     pair.value = newEntity;
@@ -28,8 +31,8 @@ void Activator::append(EntityPair pair, QEntity* newEntity) {
 
 void Activator::remove(EntityPair pair) {
     if(pair.key == nullptr || pair.value == nullptr) return;
-    Enumerator<EntityPair> parent = map->childs(pair.key)->getEnumerator();
-    if(!parent->moveNext()) return;
+    EntityPair parent = map->parent(pair.key);
+    if(parent.key != nullptr) return;
     Enumerator<EntityPair> childs = map->childs(pair.key)->getEnumerator();
     while(childs->moveNext()) {
         childs->current().value->setEnabled(true);

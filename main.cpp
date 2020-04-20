@@ -22,8 +22,8 @@
 
 #include "utils/Adapter.h"
 #include "utils/Activator.h"
+#include "utils/Centering.hpp"
 #include "utils/EntityConstructor.h"
-
 
 namespace bstu {
     Tree* create_box();
@@ -33,18 +33,21 @@ namespace bstu {
 using namespace bstu;
 int main(int argc, char *argv[])
 {
+    /// QObject объекты не надо удалять, они сами удалятся при завершении процесса
     QApplication a(argc, argv);
 
-    Tree* greenhouse = bstu::create_greenhouse(10);
-    //greenhouse->restructure();
-    //bstu::Tree* box = bstu::create_box();
+    //Tree* tree = create_box();
+
+    Tree* tree = create_greenhouse(10);
+    //tree->restructure();
+
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
     /// Контейнер, обеспечивающий связь между данными и сущностями
     EntitiesContainer* mainContainer = new EntitiesContainer(view);
     ///
-    PolyhedronTreeView* tree_view = new PolyhedronTreeView(mainContainer, nullptr, greenhouse);
+    PolyhedronTreeView* tree_view = new PolyhedronTreeView(mainContainer, nullptr, tree);
 
     /// Инициализация источника освещения и камеры
     /// (инициализация начнеться, когда view подаст сигнал о смене статуса
@@ -58,7 +61,7 @@ int main(int argc, char *argv[])
     AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
 
     /// Для оптимизации обновления положения, при центровке
-    AbstractTransformSet* transformsSet = new TransformsSet(view);
+    TransformsSet* transformsSet = new TransformsSet(view);
 
     /// Отвечает за создание QEntity при добалении нового полихедрона в множество
     new EntityConstructor(geometryFactory, materialFactory, transformFactory, mainContainer, transformsSet, view);
@@ -66,13 +69,13 @@ int main(int argc, char *argv[])
     new Adapter(view, mainContainer);
     /// Отвечает за активацию/деактивацию QEntity
     new Activator(mainContainer);
+    /// Отвечает за центровку фигур
+    new Centering(mainContainer, transformsSet);
 
     tree_view->show();
-    view->create(); view->show();
+    QWidget* widget = QWidget::createWindowContainer(view);
+    widget->show();
     int result = a.exec();
-
-    view->deleteLater();
-    tree_view->deleteLater();
 
     delete geometryFactory;
     delete materialFactory;

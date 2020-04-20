@@ -159,7 +159,7 @@ Enumerator<EntityPair> EntitiesContainer::getEnumerator() const {
     return Enumerator<EntityPair>(new QHashEnumerator(container));
 }
 
-EntityPair EntitiesContainer::parrent(PolyhedronExtension* key) const {
+EntityPair EntitiesContainer::parent(PolyhedronExtension* key) const {
     EntityPair pair;
     if(key) key = key->parrent();
     while(key) {
