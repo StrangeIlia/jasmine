@@ -21,6 +21,7 @@
 #include "utils/factories/imp/SimpleTransformFactory.h"
 
 #include "utils/Adapter.h"
+#include "utils/Activator.h"
 #include "utils/EntityConstructor.h"
 
 
@@ -57,19 +58,24 @@ int main(int argc, char *argv[])
     AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
 
     /// Для оптимизации обновления положения, при центровке
-    AbstractSet<Qt3DCore::QTransform>* transformsSet = new TransformsSet(view);
+    AbstractTransformSet* transformsSet = new TransformsSet(view);
 
     /// Отвечает за создание QEntity при добалении нового полихедрона в множество
     new EntityConstructor(geometryFactory, materialFactory, transformFactory, mainContainer, transformsSet, view);
     /// Отвечает за добавление QEntity на сцену
     new Adapter(view, mainContainer);
+    /// Отвечает за активацию/деактивацию QEntity
+    new Activator(mainContainer);
 
     tree_view->show();
-    view->create(); view->show();
+    view->create(); view->show(); //Способ не работает
+    //QWidget* container = QWidget::createWindowContainer(view);
+    //container->show();
 
     int result = a.exec();
 
     view->deleteLater();
+    //container->deleteLater();
     tree_view->deleteLater();
 
     delete geometryFactory;

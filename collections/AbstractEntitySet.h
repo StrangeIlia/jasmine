@@ -4,6 +4,11 @@
 #include <QObject>
 #include <Qt3DCore>
 
+/*
+ * QObject не поддерживает шаблонных наследников,
+ * поэтому для каждого типа пришлось делать свой класс
+*/
+
 namespace bstu {
 using namespace Qt3DCore;
 class AbstractEntitySet : public QObject {

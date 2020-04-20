@@ -4,6 +4,11 @@
 #include <QObject>
 #include <Qt3DCore>
 
+/*
+ * QObject не поддерживает шаблонных наследников,
+ * поэтому для каждого типа пришлось делать свой класс
+*/
+
 namespace bstu {
 class AbstractTransformSet : public QObject {
     Q_OBJECT

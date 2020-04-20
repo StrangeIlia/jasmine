@@ -1,7 +1,7 @@
 #include "TransformsSet.h"
 
 namespace bstu {
-TransformsSet::TransformsSet(QObject *parent) : AbstractSet<Qt3DCore::QTransform>(parent) {
+TransformsSet::TransformsSet(QObject *parent) : AbstractTransformSet(parent) {
 
 }
 
@@ -44,10 +44,14 @@ Enumerator<Qt3DCore::QTransform*> TransformsSet::getEnumerator() const {
     return Enumerator<Qt3DCore::QTransform*>(new SimpleEnumerator(set.begin(), set.end()));
 }
 
+void TransformsSet::___remove(QObject* obj) {
+    this->remove((Qt3DCore::QTransform*) obj);
+}
+
 bool TransformsSet::_setAppend(Qt3DCore::QTransform* key) {
     if(!set.contains(key)) {
         set.insert(key);
-        connect(key, SIGNAL(destroyed(QObject*)), SLOT(remove(Qt3DCore::QTransform*)));
+        connect(key, SIGNAL(destroyed(QObject*)), this, SLOT(___remove(QObject*)));
         return true;
     }
     return false;

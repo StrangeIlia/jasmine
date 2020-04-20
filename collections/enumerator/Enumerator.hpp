@@ -6,7 +6,7 @@
 namespace bstu {
 template<class T> class AbstractEnumerator {
 public:
-    AbstractEnumerator();
+    AbstractEnumerator() {}
     virtual ~AbstractEnumerator() {}
     virtual T current() const = 0;
     virtual bool moveNext() = 0;

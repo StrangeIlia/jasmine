@@ -38,19 +38,18 @@ FORMS += \
     mainwindow.ui
 
 HEADERS += \
+    collections/AbstractEntityMap.hpp \
+    collections/AbstractEntitySet.h \
+    collections/AbstractPolyhedronSet.h \
+    collections/AbstractTransformSet.h \
+    collections/enumerator/Enumerator.hpp \
     EntitiesContainer.h \
     MyOrbitCameraController.h \
     PolyhedronTreeView.h \
     View3D.h \
-    collections/AbstractEntityMap.hpp \
-    collections/AbstractEntitySet.h \
-    collections/AbstractPolyhedronSet.h \
-    collections/AbstractSet.hpp \
-    collections/AbstractTransformSet.h \
     collections/Enumerable.hpp \
     collections/TransformsSet.h \
     collections/enumerator/ConditionalEnumerator.hpp \
-    collections/enumerator/Enumerator.hpp \
     exceptions/NotImplementedException.hpp \
     extensions/PolyhedronExtension.h \
     geometry/Halver.h \
@@ -70,6 +69,7 @@ HEADERS += \
     initializers/SelectorInitializer.h \
     mainwindow.h \
     utils/AbstractLockable.h \
+    utils/Activator.h \
     utils/Adapter.h \
     utils/Centering.hpp \
     utils/Cleaner.hpp \
@@ -89,7 +89,6 @@ SOURCES += \
     collections/AbstractEntityMap.cpp \
     collections/AbstractEntitySet.cpp \
     collections/AbstractPolyhedronSet.cpp \
-    collections/AbstractSet.cpp \
     collections/AbstractTransformSet.cpp \
     collections/TransformsSet.cpp \
     extensions/PolyhedronExtension.cpp \
@@ -97,6 +96,7 @@ SOURCES += \
     initializers/SelectorInitializer.cpp \
     main.cpp \
     mainwindow.cpp \
+    utils/Activator.cpp \
     utils/Adapter.cpp \
     utils/Centering.cpp \
     utils/EntityConstructor.cpp \

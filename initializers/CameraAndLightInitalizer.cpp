@@ -9,19 +9,23 @@ void CameraAndLightInitalizer::init(){
         return;
 
     QCamera *camera = view()->camera();
-    _transform = new Qt3DCore::QTransform();
+    //_transform = new Qt3DCore::QTransform();
     _controller = new MyOrbitCameraController(view()->rootEntity());
     _lightEntity = new Qt3DCore::QEntity(view()->rootEntity());
     _light = new Qt3DRender::QPointLight(_lightEntity);
+
 
     camera->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
     camera->setPosition(QVector3D(0.0f, 0.0f, -5.0f));
     camera->setViewCenter(QVector3D(0.0f, 0.0f, 0.0f));
 
+    _transform = camera->componentsOfType<Qt3DCore::QTransform>().first();
     _transform->setShareable(true);
+    //camera->addComponent(_transform);
 
     _controller->setCamera(camera);
-    _controller->addComponent(_transform);
+    _controller->setZoomInLimit(4.0f);
+
     _light->setColor("white");
     _light->setIntensity(1);
     _lightEntity->addComponent(_light);

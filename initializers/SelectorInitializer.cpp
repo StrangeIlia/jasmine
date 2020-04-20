@@ -4,8 +4,11 @@ namespace bstu {
 SelectorInitializer::SelectorInitializer(View3D *view) : AbstractViewInitializer(view)
 {
     QEntity* fictitious = new QEntity(view->rootEntity());
-    selectedMaterial = new QPhongAlphaMaterial(fictitious);
+    QPhongAlphaMaterial* selectedMaterial = new QPhongAlphaMaterial(fictitious);
     selectedMaterial->setShareable(true);
+    selectedMaterial->setShininess(0.8f);
+    selectedMaterial->setDiffuse(Qt::red);
+    this->selectedMaterial = selectedMaterial;
     fictitious->addComponent(selectedMaterial);
 }
 
@@ -19,10 +22,11 @@ void SelectorInitializer::init() {
     picker->setHoverEnabled(true);
     view()->rootEntity()->addComponent(picker);
 
-    connect(picker, SIGNAL(clicked(QPickEvent*)), this, SLOT(select(Qt3DRender::QPickEvent*)));
+    connect(picker, SIGNAL(clicked(Qt3DRender::QPickEvent*)), this, SLOT(select(Qt3DRender::QPickEvent*)));
 }
 
-void SelectorInitializer::select(QPickEvent* event) {
+void SelectorInitializer::select(Qt3DRender::QPickEvent* event) {
+    if(event->button() != Qt3DRender::QPickEvent::LeftButton) return;
     bool equals = selectedEntity == event->entity();
     if(selectedEntity != nullptr) {
         selectedEntity->removeComponent(selectedMaterial);
@@ -33,6 +37,7 @@ void SelectorInitializer::select(QPickEvent* event) {
         oldMaterial = event->entity()->componentsOfType<QMaterial>().first();
         event->entity()->removeComponent(oldMaterial);
         event->entity()->addComponent(selectedMaterial);
+        selectedMaterial->moveToThread(event->entity()->thread());
         selectedEntity = event->entity();
     }
 }

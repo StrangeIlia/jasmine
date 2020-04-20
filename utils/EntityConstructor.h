@@ -7,7 +7,7 @@
 #include "factories/AbstractGeometryFactory.hpp"
 #include "factories/AbstractMaterialFactory.hpp"
 #include "factories/AbstractTransformFactory.hpp"
-#include "collections/AbstractSet.hpp"
+#include "collections/AbstractTransformSet.h"
 #include "collections/AbstractEntityMap.hpp"
 
 namespace bstu {
@@ -19,7 +19,7 @@ public:
                                AbstractMaterialFactory* material,
                                AbstractTransformFactory* transform,
                                AbstractEntityMap* map,
-                               AbstractSet<Qt3DCore::QTransform>* set,
+                               AbstractTransformSet* set,
                                QObject *parent = nullptr);
 private slots:
     void createEntity(EntityPair pair);
@@ -28,7 +28,7 @@ private:
     AbstractGeometryFactory* geometry = nullptr;
     AbstractMaterialFactory* material = nullptr;
     AbstractTransformFactory* transform = nullptr;
-    AbstractSet<Qt3DCore::QTransform>* set = nullptr;
+    AbstractTransformSet* set = nullptr;
 };
 }
 

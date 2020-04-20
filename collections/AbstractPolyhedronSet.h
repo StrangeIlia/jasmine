@@ -5,6 +5,11 @@
 
 #include "extensions/PolyhedronExtension.h"
 
+/*
+ * QObject не поддерживает шаблонных наследников,
+ * поэтому для каждого типа пришлось делать свой класс
+*/
+
 namespace bstu {
 class AbstractPolyhedronSet : public QObject {
     Q_OBJECT

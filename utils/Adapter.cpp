@@ -1,7 +1,7 @@
 #include "Adapter.h"
 
 namespace bstu {
-Adapter::Adapter(View3D* view, AbstractSet<QEntity>* set) : QObject(view) {
+Adapter::Adapter(View3D* view, AbstractEntitySet* set) : QObject(view) {
     this->set = set;
     this->view = view;
     connect(set, SIGNAL(appended(QEntity*)), SLOT(addEntity(QEntity*)));
@@ -9,12 +9,15 @@ Adapter::Adapter(View3D* view, AbstractSet<QEntity>* set) : QObject(view) {
 }
 
 void Adapter::addEntity(QEntity* entity) {
-    entity->moveToThread(view->thread());
-    entity->setParent(view->rootEntity());
+    if(entity != nullptr) {
+        entity->moveToThread(view->rootEntity()->thread());
+        entity->setParent(view->rootEntity());
+    }
 }
 
 void Adapter::removeEntity(QEntity* entity) {
-    entity->setParent((QNode*)nullptr);
+    if(entity != nullptr)
+        entity->setParent((QNode*)nullptr);
 }
 
 }

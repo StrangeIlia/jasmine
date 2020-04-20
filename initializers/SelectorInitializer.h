@@ -20,7 +20,7 @@ class SelectorInitializer : public AbstractViewInitializer
 public:
     explicit SelectorInitializer(View3D *view);
 private slots:
-    void select(QPickEvent* );
+    void select(Qt3DRender::QPickEvent* );
 private:
     void init() override;
 

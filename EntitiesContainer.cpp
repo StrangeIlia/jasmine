@@ -3,8 +3,8 @@
 namespace bstu {
 
 EntitiesContainer::EntitiesContainer(QObject *parrent) :
-    AbstractSet<PolyhedronExtension>(parrent),
-    AbstractSet<QEntity>(parrent) {
+    AbstractPolyhedronSet(parrent),
+    AbstractEntitySet(parrent) {
 
 }
 
@@ -29,7 +29,7 @@ bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
         pair.key = polyhedron;
         pair.value = iterator.value();
         if(pair.value != nullptr)
-            emit AbstractSet<QEntity>::removed(iterator.value());
+            emit AbstractEntitySet::removed(pair.value);
         else {
 #if PARALLEL_CONTAINER_HANDLING
             mutex.unlock();
@@ -39,6 +39,8 @@ bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
     }
     container.insert(polyhedron, nullptr);
     if(pair.key == nullptr) {
+        pair.key = polyhedron;
+        pair.value = nullptr;
         emit AbstractEntityMap::appended(pair);
 #if PARALLEL_CONTAINER_HANDLING
         mutex.unlock();
@@ -66,7 +68,8 @@ bool EntitiesContainer::_setRemove(PolyhedronExtension* polyhedron) {
         pair.key = iterator.key();
         pair.value = iterator.value();
         container.remove(polyhedron);
-        emit AbstractSet<QEntity>::removed(pair.value);
+        if(pair.value != nullptr)
+            emit AbstractEntitySet::removed(pair.value);
         emit AbstractEntityMap::removed(pair);
 #if PARALLEL_CONTAINER_HANDLING
         mutex.unlock();
@@ -100,7 +103,7 @@ bool EntitiesContainer::_setRemove(QEntity* entity) {
         pair.key = iterator.key();
         pair.value = iterator.value();
         container.remove(key);
-        emit AbstractSet<PolyhedronExtension>::removed(pair.key);
+        emit AbstractPolyhedronSet::removed(pair.key);
         emit AbstractEntityMap::removed(pair);
 #if PARALLEL_CONTAINER_HANDLING
         mutex.unlock();
@@ -139,11 +142,11 @@ public:
         pair.value = nullptr;
     }
 
-    virtual EntityPair current() const {
+    EntityPair current() const override {
         return pair;
     }
 
-    virtual bool moveNext() {
+    bool moveNext() override {
         if(curr == end) return false;
         pair.key = curr.key();
         pair.value = curr.value();
@@ -188,11 +191,11 @@ public:
             stack.append(key->child1());
     }
 
-    virtual EntityPair current() const {
+    EntityPair current() const override {
         return pair;
     }
 
-    virtual bool moveNext() {
+    bool moveNext() override {
         while(!stack.empty()) {
             PolyhedronExtension* polyhedron = stack.pop();
             auto iterator = hash.find(polyhedron);
@@ -241,7 +244,7 @@ bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value, QEn
         oldKey = iterator.key();
         oldValue = iterator.value();
         if(oldValue != value)
-            emit AbstractSet<QEntity>::removed(oldValue);
+            emit AbstractEntitySet::removed(oldValue);
         else {
 #if PARALLEL_CONTAINER_HANDLING
             mutex.unlock();
@@ -251,16 +254,17 @@ bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value, QEn
     }
     container.insert(key, value);
     if(oldKey == nullptr) {
-        emit AbstractSet<PolyhedronExtension>::appended(key);
-        emit AbstractSet<QEntity>::appended(value);
+        emit AbstractPolyhedronSet::appended(key);
+        if(value != nullptr)
+            emit AbstractEntitySet::appended(value);
 #if PARALLEL_CONTAINER_HANDLING
         mutex.unlock();
 #endif
         return true;
     }
     else {
-        if(oldValue != value) {
-            emit AbstractSet<QEntity>::appended(value);
+        if(oldValue != value && value != nullptr) {
+            emit AbstractEntitySet::appended(value);
         }
 #if PARALLEL_CONTAINER_HANDLING
         mutex.unlock();
@@ -287,9 +291,9 @@ bool EntitiesContainer::_mapChange(PolyhedronExtension* key, QEntity* value, QEn
 #endif
         return false;
     }
-    emit AbstractSet<QEntity>::removed(oldValue);
+    emit AbstractEntitySet::removed(oldValue);
     container.insert(key, value);
-    emit AbstractSet<QEntity>::appended(value);
+    emit AbstractEntitySet::appended(value);
     return true;
 }
 
@@ -303,8 +307,9 @@ bool EntitiesContainer::_mapRemove(PolyhedronExtension* key) {
         pair.key = iterator.key();
         pair.value = iterator.value();
         container.remove(key);
-        emit AbstractSet<PolyhedronExtension>::removed(pair.key);
-        emit AbstractSet<QEntity>::removed(pair.value);
+        emit AbstractPolyhedronSet::removed(pair.key);
+        if(pair.value != nullptr)
+            emit AbstractEntitySet::removed(pair.value);
 #if PARALLEL_CONTAINER_HANDLING
         mutex.unlock();
 #endif

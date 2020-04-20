@@ -43,6 +43,10 @@ PolyhedronExtension::~PolyhedronExtension() {
     }
 }
 
+Polyhedron* PolyhedronExtension::data() {
+    return _data;
+}
+
 PolyhedronExtension* PolyhedronExtension::parrent() {
     return _parrent;
 }

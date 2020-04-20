@@ -5,7 +5,7 @@ EntityConstructor::EntityConstructor(AbstractGeometryFactory* geometry,
                                AbstractMaterialFactory* material,
                                AbstractTransformFactory* transform,
                                AbstractEntityMap* map,
-                               AbstractSet<Qt3DCore::QTransform>* set,
+                               AbstractTransformSet* set,
                                QObject *parent) : QObject(parent) {
     this->map = map;
     this->set = set;

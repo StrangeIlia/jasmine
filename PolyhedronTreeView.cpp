@@ -4,7 +4,7 @@ Q_DECLARE_METATYPE(bstu::PolyhedronExtension*)
 
 namespace bstu {
 
-PolyhedronTreeView::PolyhedronTreeView(AbstractSet<PolyhedronExtension> *set, QWidget *parrent, Tree* tree) : QTreeView(parrent)
+PolyhedronTreeView::PolyhedronTreeView(AbstractPolyhedronSet *set, QWidget *parrent, Tree* tree) : QTreeView(parrent)
 {
     if(set == nullptr) {
         throw std::exception();
@@ -43,9 +43,13 @@ void PolyhedronTreeView::setTree(Tree* tree)
 
 void PolyhedronTreeView::clearTree() {
     QStandardItemModel* model = (QStandardItemModel*)this->model();
+    if(model == nullptr) return;
     for(int i = 0; i != model->rowCount(); ++i) {
-        PolyhedronExtension* polyhedron = qvariant_cast<PolyhedronExtension*>(model->item(i)->data());
-        delete polyhedron;
+        QStandardItem *item = model->item(i);
+        if(item != nullptr && item->data().data() != nullptr) {
+            PolyhedronExtension* polyhedron = qvariant_cast<PolyhedronExtension*>(item->data());
+            delete polyhedron;
+        }
     }
     model->removeRows(0, model->rowCount());
 }

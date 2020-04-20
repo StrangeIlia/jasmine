@@ -12,6 +12,7 @@ namespace bstu {
 class TransformsSet : public AbstractTransformSet,
                       public AbstractEnumerable<Qt3DCore::QTransform*>
 {
+    Q_OBJECT
 public:
     explicit TransformsSet(QObject *parent = nullptr);
 
@@ -19,6 +20,8 @@ public:
     int count() const override;
 
     Enumerator<Qt3DCore::QTransform*> getEnumerator() const override;
+private slots:
+    void ___remove(QObject*);
 private:
     bool _setAppend(Qt3DCore::QTransform* key) override;
     bool _setRemove(Qt3DCore::QTransform* key) override;
