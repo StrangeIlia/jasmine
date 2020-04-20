@@ -4,7 +4,7 @@ Q_DECLARE_METATYPE(bstu::PolyhedronExtension*)
 
 namespace bstu {
 
-PolyhedronTreeView::PolyhedronTreeView(AbstractEntitySet *set, QWidget *parrent, Tree* tree) : QTreeView(parrent)
+PolyhedronTreeView::PolyhedronTreeView(AbstractSet<PolyhedronExtension> *set, QWidget *parrent, Tree* tree) : QTreeView(parrent)
 {
     if(set == nullptr) {
         throw std::exception();
@@ -22,11 +22,15 @@ PolyhedronTreeView::PolyhedronTreeView(AbstractEntitySet *set, QWidget *parrent,
     this->setTree(tree);
 }
 
+PolyhedronTreeView::~PolyhedronTreeView() {
+    clearTree();
+}
+
 void PolyhedronTreeView::setTree(Tree* tree)
 {
-    QStandardItemModel* model = (QStandardItemModel*)this->model();
-    model->removeRows(0, model->rowCount());
+    clearTree();
     if(tree == nullptr) return;
+    QStandardItemModel* model = (QStandardItemModel*)this->model();
     for (unsigned i = 0; i < tree->polyhedronsCount(); i++)
     {
         Polyhedron* polyhedron = tree->polyhedron(i);
@@ -37,19 +41,28 @@ void PolyhedronTreeView::setTree(Tree* tree)
     }
 }
 
+void PolyhedronTreeView::clearTree() {
+    QStandardItemModel* model = (QStandardItemModel*)this->model();
+    for(int i = 0; i != model->rowCount(); ++i) {
+        PolyhedronExtension* polyhedron = qvariant_cast<PolyhedronExtension*>(model->item(i)->data());
+        delete polyhedron;
+    }
+    model->removeRows(0, model->rowCount());
+}
+
 void PolyhedronTreeView::clickProcessing(QStandardItem* item)
 {
     if(item->isCheckable())
     {
-        Polyhedron* polyhedron = qvariant_cast<Polyhedron*>(item->data());
+        PolyhedronExtension* polyhedron = qvariant_cast<PolyhedronExtension*>(item->data());
         if(item->checkState() == Qt::CheckState::Checked)
         {
-            _activePolyhedrons += polyhedron;
+            activePolyhedrons->append(polyhedron);
             emit polyhedronSelected(polyhedron);
         }
         else
         {
-            _activePolyhedrons -= polyhedron;
+            activePolyhedrons->remove(polyhedron);
             emit polyhedronUnselected(polyhedron);
         }
     }
@@ -60,21 +73,22 @@ void PolyhedronTreeView::fillProcessing(const QModelIndex& index)
     QStandardItemModel* model = (QStandardItemModel*)this->model();
     QStandardItem* item = model->itemFromIndex(index);
     item->removeRows(0, item->row()); // Удаляем фиктивный элемент
-    Polyhedron* polyhedron = qvariant_cast<Polyhedron*>(item->data());
+    PolyhedronExtension* extension = qvariant_cast<PolyhedronExtension*>(item->data());
+    Polyhedron* polyhedron = extension->data();
     int shift = 0;
     if(polyhedron->isHalve())
     {
         shift = 2;
-        Polyhedron* child1 = polyhedron->child1();
-        Polyhedron* child2 = polyhedron->child2();
+        PolyhedronExtension* child1 = extension->child1();
+        PolyhedronExtension* child2 = extension->child2();
         QStandardItem* item1 = new QStandardItem(QString("Многогранник 1"));
         QStandardItem* item2 = new QStandardItem(QString("Многогранник 2"));
         appendData(item1, child1);
         appendData(item2, child2);
         item->setChild(0, 0, item1);
-        item->setChild(0, 1, new QStandardItem(QString("%0").arg(child1->volume())));
+        item->setChild(0, 1, new QStandardItem(QString("%0").arg(child1->data()->volume())));
         item->setChild(1, 0, item2);
-        item->setChild(1, 1, new QStandardItem(QString("%0").arg(child2->volume())));
+        item->setChild(1, 1, new QStandardItem(QString("%0").arg(child2->data()->volume())));
     }
 
     for (int j = 0; j < polyhedron->size(); ++j)
@@ -94,12 +108,12 @@ void PolyhedronTreeView::clearProcessing(const QModelIndex& index)
     item->setChild(0, new QStandardItem()); // Добавляем фиктивный элемент
 }
 
-void PolyhedronTreeView::appendData(QStandardItem* item, Polyhedron* polyhedron)
+void PolyhedronTreeView::appendData(QStandardItem* item, PolyhedronExtension* polyhedron)
 {
     item->setCheckable(true);
     item->setEditable(false);
     item->setData(QVariant::fromValue(polyhedron));
-    if(_activePolyhedrons.contains(polyhedron))
+    if(activePolyhedrons->has(polyhedron))
         item->setCheckState(Qt::CheckState::Checked);
     item->setBackground(QColor(250, 180, 80));
     item->setChild(0, new QStandardItem()); // Добавляем фиктивный элемент

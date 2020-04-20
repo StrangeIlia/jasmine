@@ -1,8 +1,9 @@
 #ifndef ENTITIESCONTAINER_H
 #define ENTITIESCONTAINER_H
 
-#include "collections/AbstractSet.h"
+#include "collections/AbstractEntitySet.h"
 #include "collections/AbstractEntityMap.hpp"
+#include "collections/AbstractPolyhedronSet.h"
 #include "exceptions/NotImplementedException.hpp"
 
 #include <QHash>
@@ -13,12 +14,12 @@
 namespace bstu {
 
 
-class EntitiesContainer : public AbstractSet<PolyhedronExtension>,
-                          public AbstractSet<QEntity>,
+class EntitiesContainer : public AbstractPolyhedronSet,
+                          public AbstractEntitySet,
                           public AbstractEntityMap
 {
 public:
-    explicit EntitiesContainer(QObject* parrent);
+    explicit EntitiesContainer(QObject* parrent = nullptr);
 private:
     int count() const override;
 

@@ -14,6 +14,13 @@ View3D::View3D(QWidget* parent)
     setRootEntity(_rootEntity);
 }
 
+QEntity* View3D::rootEntity() {
+    return _rootEntity;
+}
+
+
+
+
 /// Нашел настройку, для выбора элементов по пересечению с треугольниками
 //    QRenderSettings* render_settings = renderSettings();
 //    QPickingSettings* picking_settings = render_settings->pickingSettings();

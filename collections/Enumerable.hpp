@@ -12,13 +12,13 @@ public:
 
 template<class T> class Enumerable : public QSharedPointer<AbstractEnumerable<T>> {
 public:
-    Enumerable(AbstractEnumerable<T>* ptr) : QSharedPointer<AbstractEnumerator<T>>(ptr) {
+    Enumerable(AbstractEnumerable<T>* ptr) : QSharedPointer<AbstractEnumerable<T>>(ptr) {
 
     }
-    Enumerable(Enumerable&& enumerable) : QSharedPointer<AbstractEnumerator<T>>(enumerable) {
+    Enumerable(Enumerable&& enumerable) : QSharedPointer<AbstractEnumerable<T>>(enumerable) {
 
     }
-    Enumerable(const Enumerable& enumerable) : QSharedPointer<AbstractEnumerator<T>>(enumerable) {
+    Enumerable(const Enumerable& enumerable) : QSharedPointer<AbstractEnumerable<T>>(enumerable) {
 
     }
 };

@@ -38,25 +38,19 @@ FORMS += \
     mainwindow.ui
 
 HEADERS += \
-    AbstractEntityMap.hpp \
-    AbstractEntitySet.h \
-    AbstractInitializer.h \
-    CameraAndLightInitalizer.h \
     EntitiesContainer.h \
-    EntityController.h \
     MyOrbitCameraController.h \
-    PolyhedronExtension.h \
     PolyhedronTreeView.h \
     View3D.h \
     collections/AbstractEntityMap.hpp \
-    collections/AbstractSet.h \
+    collections/AbstractEntitySet.h \
+    collections/AbstractPolyhedronSet.h \
+    collections/AbstractSet.hpp \
+    collections/AbstractTransformSet.h \
     collections/Enumerable.hpp \
     collections/TransformsSet.h \
     collections/enumerator/ConditionalEnumerator.hpp \
     collections/enumerator/Enumerator.hpp \
-    enumerator/ConditionalEnumerator.hpp \
-    enumerator/Enumerable.hpp \
-    enumerator/Enumerator.hpp \
     exceptions/NotImplementedException.hpp \
     extensions/PolyhedronExtension.h \
     geometry/Halver.h \
@@ -73,61 +67,39 @@ HEADERS += \
     geometry/lib_geometry_global.h \
     initializers/AbstractViewInitializer.hpp \
     initializers/CameraAndLightInitalizer.h \
-    iterator/AbstractEnumerator.hpp \
+    initializers/SelectorInitializer.h \
     mainwindow.h \
-    ui_mainwindow.h \
-    utils/AbstractGeometryFactory.hpp \
     utils/AbstractLockable.h \
-    utils/AbstractMaterialFactory.hpp \
     utils/Adapter.h \
     utils/Centering.hpp \
     utils/Cleaner.hpp \
     utils/EntityConstructor.h \
-    utils/SimpleGeometryFactory.h \
-    utils/SimpleMaterialFactory.h \
     utils/factories/AbstractGeometryFactory.hpp \
     utils/factories/AbstractMaterialFactory.hpp \
     utils/factories/AbstractTransformFactory.hpp \
     utils/factories/imp/SimpleGeometryFactory.h \
     utils/factories/imp/SimpleMaterialFactory.h \
-    utils/factories/imp/SimpleTransformFactory.h \
-    v2/CameraControllerFactory_MyOrbitCamera.h \
-    v2/EntityController_Polyhedron.h \
-    v2/GeometryRendererFactory_Polyhedron.h \
-    v2/ICameraControllerFactory.h \
-    v2/IGeometryRendererFactory.h \
-    v2/PolyhedronTreeView_v2.h \
-    v2/View3D.h
+    utils/factories/imp/SimpleTransformFactory.h
 
 SOURCES += \
-    AbstractEntityMap.cpp \
-    AbstractEntitySet.cpp \
-    CameraAndLightInitalizer.cpp \
     EntitiesContainer.cpp \
-    EntityController.cpp \
     MyOrbitCameraController.cpp \
-    PolyhedronExtension.cpp \
     PolyhedronTreeView.cpp \
     View3D.cpp \
     collections/AbstractEntityMap.cpp \
+    collections/AbstractEntitySet.cpp \
+    collections/AbstractPolyhedronSet.cpp \
     collections/AbstractSet.cpp \
+    collections/AbstractTransformSet.cpp \
     collections/TransformsSet.cpp \
     extensions/PolyhedronExtension.cpp \
     initializers/CameraAndLightInitalizer.cpp \
+    initializers/SelectorInitializer.cpp \
     main.cpp \
     mainwindow.cpp \
     utils/Adapter.cpp \
     utils/Centering.cpp \
     utils/EntityConstructor.cpp \
-    utils/SimpleGeometryFactory.cpp \
-    utils/SimpleMaterialFactory.cpp \
     utils/factories/imp/SimpleGeometryFactory.cpp \
     utils/factories/imp/SimpleMaterialFactory.cpp \
-    utils/factories/imp/SimpleTransformFactory.cpp \
-    v2/CameraControllerFactory_MyOrbitCamera.cpp \
-    v2/EntityController_Polyhedron.cpp \
-    v2/GeometryRendererFactory_Polyhedron.cpp \
-    v2/ICameraControllerFactory.cpp \
-    v2/IGeometryRendererFactory.cpp \
-    v2/PolyhedronTreeView_v2.cpp \
-    v2/View3D.cpp
+    utils/factories/imp/SimpleTransformFactory.cpp

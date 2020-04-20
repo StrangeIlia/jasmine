@@ -1,6 +1,8 @@
 #ifndef ABSTRACTSET_H
 #define ABSTRACTSET_H
 
+#include "exceptions/NotImplementedException.hpp"
+
 #include "extensions/PolyhedronExtension.h"
 
 #include <QObject>

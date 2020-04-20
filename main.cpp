@@ -1,41 +1,82 @@
-#include "mainwindow.h"
+//#include "mainwindow.h"
 #include <QApplication>
-#include <stdio.h>
-#include "CameraControllerFactory_MyOrbitCamera.h"
+//#include <stdio.h>
+//#include "EntityController.h"
+
+//#include <thread>
+
+//#include <cmath>
+
+#include "View3D.h"
+#include "EntitiesContainer.h"
 #include "PolyhedronTreeView.h"
-#include "EntityController.h"
 
-#include <thread>
+#include "collections/TransformsSet.h"
 
-#include <cmath>
+#include "initializers/CameraAndLightInitalizer.h"
+#include "initializers/SelectorInitializer.h"
+
+#include "utils/factories/imp/SimpleGeometryFactory.h"
+#include "utils/factories/imp/SimpleMaterialFactory.h"
+#include "utils/factories/imp/SimpleTransformFactory.h"
+
+#include "utils/Adapter.h"
+#include "utils/EntityConstructor.h"
+
 
 namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
 }
 
+using namespace bstu;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    bstu::Tree* greenhouse = bstu::create_greenhouse(10);
+    Tree* greenhouse = bstu::create_greenhouse(10);
     //greenhouse->restructure();
+    //bstu::Tree* box = bstu::create_box();
 
-    bstu::Tree* box = bstu::create_box();
+    /// View с отображаемыми фигурами
+    View3D* view = new bstu::View3D();
+    /// Контейнер, обеспечивающий связь между данными и сущностями
+    EntitiesContainer* mainContainer = new EntitiesContainer(view);
+    ///
+    PolyhedronTreeView* tree_view = new PolyhedronTreeView(mainContainer, nullptr, greenhouse);
 
-    bstu::PolyhedronTreeView* tree_view = new bstu::PolyhedronTreeView(greenhouse);
-    bstu::CameraControllerFactory_MyOrbitCamera factory;
-    bstu::View3D* view = new bstu::View3D();
-    bstu::EntityController* controller = new bstu::EntityController(view);
-    QObject::connect(tree_view, SIGNAL(polyhedronSelected(Polyhedron*)), controller, SLOT(addEntity(Polyhedron*)));
-    QObject::connect(tree_view, SIGNAL(polyhedronUnselected(Polyhedron*)), controller, SLOT(removeEntity(Polyhedron*)));
+    /// Инициализация источника освещения и камеры
+    /// (инициализация начнеться, когда view подаст сигнал о смене статуса
+    /// удалять их в ручном режиме не надо, они удаляться вместе с view
+    new CameraAndLightInitalizer(view);
+    /// Инициализация источника освещения и камеры
+    new SelectorInitializer(view);
 
+    AbstractGeometryFactory* geometryFactory = new SimpleGeometryFactory();
+    AbstractMaterialFactory* materialFactory = new SimpleMaterialFactory(view->rootEntity());
+    AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
 
+    /// Для оптимизации обновления положения, при центровке
+    AbstractSet<Qt3DCore::QTransform>* transformsSet = new TransformsSet(view);
+
+    /// Отвечает за создание QEntity при добалении нового полихедрона в множество
+    new EntityConstructor(geometryFactory, materialFactory, transformFactory, mainContainer, transformsSet, view);
+    /// Отвечает за добавление QEntity на сцену
+    new Adapter(view, mainContainer);
 
     tree_view->show();
-    view->container()->show();
+    view->create(); view->show();
 
-    return a.exec();
+    int result = a.exec();
+
+    view->deleteLater();
+    tree_view->deleteLater();
+
+    delete geometryFactory;
+    delete materialFactory;
+    delete transformFactory;
+
+    return result;
 }
 
 
@@ -143,7 +184,7 @@ Tree* create_greenhouse(int n)
     polyhedron->link();
     polyhedron->link();
 
-    double mes = 3.14159265*R*R / 2 * 10 + 5*10;
+//    double mes = 3.14159265*R*R / 2 * 10 + 5*10;
 
     delete []V1;
     delete []V2;

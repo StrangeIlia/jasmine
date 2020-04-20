@@ -2,7 +2,7 @@
 #define POLYHEDRONTREEVIEW_H
 
 #include "geometry/Tree.h"
-#include "AbstractEntitySet.h"
+#include "collections/AbstractSet.hpp"
 
 #include <QSet>
 #include <QTreeView>
@@ -14,10 +14,11 @@ class PolyhedronTreeView : public QTreeView
 {
     Q_OBJECT
 public:
-    explicit PolyhedronTreeView(AbstractEntitySet *set, QWidget *parrent = nullptr, Tree* tree = nullptr);
+    explicit PolyhedronTreeView(AbstractSet<PolyhedronExtension> *set, QWidget *parrent = nullptr, Tree* tree = nullptr);
     ~PolyhedronTreeView();
 
     void setTree(Tree* tree);
+    void clearTree();
 signals:
     void polyhedronSelected(PolyhedronExtension*);
     void polyhedronUnselected(PolyhedronExtension*);
@@ -28,7 +29,7 @@ private slots:
     void clearProcessing(const QModelIndex& index);
 private:
     void appendData(QStandardItem* item, PolyhedronExtension* polyhedron);
-    AbstractEntitySet *activePolyhedrons;
+    AbstractSet<PolyhedronExtension> *activePolyhedrons;
 };
 
 }

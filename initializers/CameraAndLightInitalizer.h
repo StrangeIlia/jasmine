@@ -13,8 +13,8 @@ public:
     MyOrbitCameraController* controller();
     Qt3DCore::QEntity *lightEntity();
     Qt3DRender::QPointLight *light();
-protected slots:
-     virtual void init();
+protected:
+     void init() override;
 private:
     View3D* _view = nullptr;
     Qt3DCore::QTransform* _transform = nullptr;

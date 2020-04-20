@@ -7,7 +7,7 @@
 #include "factories/AbstractGeometryFactory.hpp"
 #include "factories/AbstractMaterialFactory.hpp"
 #include "factories/AbstractTransformFactory.hpp"
-#include "collections/AbstractSet.h"
+#include "collections/AbstractSet.hpp"
 #include "collections/AbstractEntityMap.hpp"
 
 namespace bstu {

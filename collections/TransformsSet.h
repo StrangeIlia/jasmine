@@ -1,7 +1,7 @@
 #ifndef TRANSFORMSCONTAINER_H
 #define TRANSFORMSCONTAINER_H
 
-#include "AbstractSet.h"
+#include "AbstractTransformSet.h"
 #include "Enumerable.hpp"
 
 #include <Qt3DCore>
@@ -9,7 +9,7 @@
 #include <QSet>
 
 namespace bstu {
-class TransformsSet : public AbstractSet<Qt3DCore::QTransform>,
+class TransformsSet : public AbstractTransformSet,
                       public AbstractEnumerable<Qt3DCore::QTransform*>
 {
 public:

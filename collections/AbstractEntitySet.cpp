@@ -1,11 +1,11 @@
-#include "AbstractSet.hpp"
+#include "AbstractEntitySet.h"
 
 namespace bstu {
-template<class T> AbstractSet<T>::AbstractSet(QObject* parrent) : QObject(parrent) {
+AbstractEntitySet::AbstractEntitySet(QObject* parrent) : QObject(parrent) {
 
 }
 
-template<class T> bool AbstractSet<T>::append(T* key) {
+bool AbstractEntitySet::append(QEntity* key) {
     if(key == nullptr) return false;
     if(_setAppend(key)) {
         emit appended(key);
@@ -14,7 +14,7 @@ template<class T> bool AbstractSet<T>::append(T* key) {
     return false;
 }
 
-template<class T> bool AbstractSet<T>::remove(T* key) {
+bool AbstractEntitySet::remove(QEntity* key) {
     if(key == nullptr) return false;
     if(_setRemove(key)) {
         emit removed(key);

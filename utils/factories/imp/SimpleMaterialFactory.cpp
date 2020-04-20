@@ -4,7 +4,7 @@ namespace bstu {
 SimpleMaterialFactory::SimpleMaterialFactory(QNode* root)
 {
     QEntity* fictitious = new QEntity(root);
-    QPhongAlphaMaterial* material = new QPhongAlphaMaterial();
+    QPhongAlphaMaterial* material = new QPhongAlphaMaterial(fictitious);
     material->setShareable(true);
     material->setAmbient(QColor::fromRgbF(50.0 / 255.0, 130.0 / 255.0, 200.0 / 255.0, 1));
     material->setShininess(0.8f);

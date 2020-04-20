@@ -3,11 +3,11 @@
 
 #include <QObject>
 
-#include "collections/AbstractSet.h"
+#include "collections/AbstractSet.hpp"
 #include "View3D.h"
 
 namespace bstu {
-class Adapter : QObject {
+class Adapter : public QObject {
     Q_OBJECT
 public:
     explicit Adapter(View3D* view, AbstractSet<QEntity>* set);

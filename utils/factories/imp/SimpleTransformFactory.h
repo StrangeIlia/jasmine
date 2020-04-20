@@ -8,7 +8,7 @@ class SimpleTransformFactory : public AbstractTransformFactory
 {
 public:
     SimpleTransformFactory(QNode* root);
-    virtual Qt3DCore::QTransform* create(Polyhedron* polyhedron) = 0;
+    Qt3DCore::QTransform* create(Polyhedron* polyhedron) override;
 private:
     Qt3DCore::QTransform* transform;
 };
