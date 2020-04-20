@@ -68,14 +68,10 @@ int main(int argc, char *argv[])
     new Activator(mainContainer);
 
     tree_view->show();
-    view->create(); view->show(); //Способ не работает
-    //QWidget* container = QWidget::createWindowContainer(view);
-    //container->show();
-
+    view->create(); view->show();
     int result = a.exec();
 
     view->deleteLater();
-    //container->deleteLater();
     tree_view->deleteLater();
 
     delete geometryFactory;
