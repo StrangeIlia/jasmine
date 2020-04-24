@@ -8,7 +8,7 @@ class SimpleGeometryFactory : public AbstractGeometryFactory
 {
 public:
     QGeometryRenderer* create(Polyhedron* polyhedron) override;
-private:
+protected:
     static void createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron);
     static void createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron);
 };

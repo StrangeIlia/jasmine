@@ -28,6 +28,12 @@
 namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
+
+
+    quint64 bigRand();
+    quint64 MAX_BIG_RAND_VALUE = 0xFFFFFFFFFFFFFFFl;
+
+    Tree* createRandomSurface(Plane plane, int pointsCount);
 }
 
 using namespace bstu;
@@ -36,11 +42,14 @@ int main(int argc, char *argv[])
     /// QObject объекты не надо удалять, они сами удалятся при завершении процесса
     QApplication a(argc, argv);
 
+    srand(GetCurrentTime());
+
     //Tree* tree = create_box();
 
-    Tree* tree = create_greenhouse(10);
+    //Tree* tree = create_greenhouse(10);
     //tree->restructure();
 
+    Tree* tree = createRandomSurface(Plane(0.8, 0, 0.6, 3), 30);
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -199,6 +208,30 @@ Tree* create_greenhouse(int n)
     return tree;
 }
 
+quint64 bigRand() {
+    quint64 result = rand();
+    result <<= 15; result |= rand();
+    result <<= 15; result |= rand();
+    result <<= 15; result |= rand();
+    return result; //60 bits random;
+}
 
+Tree* createRandomSurface(Plane plane, int pointsCount) {
+    if(pointsCount < 1) return nullptr;
+    std::vector<Vertex> vertices(pointsCount);
+    for(int i = 0; i < pointsCount; ++i) {
+        Vertex vertex;
+        vertex.x = bigRand() * 1.0 / MAX_BIG_RAND_VALUE * 10.0;
+        vertex.y = bigRand() * 1.0 / MAX_BIG_RAND_VALUE * 10.0;
+        vertex.z = -(plane.D + plane.A * vertex.x + plane.B * vertex.y) / plane.C;
+        vertices[i] = vertex;
+    }
+    VolumePolygon** P = new VolumePolygon*[1];
+    P[0] = new VolumePolygon(std::move(vertices));
+    Polyhedron* polyhedron = new Polyhedron(P, 1);
+    Tree* tree = new Tree();
+    tree->addPolyhedron(polyhedron);
+    return tree;
+}
 
 }
