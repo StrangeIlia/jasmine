@@ -4,11 +4,11 @@
 #include "exceptions/NotImplementedException.hpp"
 #include "utils/factories/imp/SimpleGeometryFactory.h"
 
-#include <QMap>
+#include <QLinkedList>
 
 namespace bstu {
 /// Используется алгоритм Делоне с динамическим кешированием и предварительным вычислением радиуса
-class DeloneGeometryFactory : public SimpleGeometryFactory
+class MonotoneMethod_GeometryFactory : public SimpleGeometryFactory
 {
 public:
     QGeometryRenderer* create(Polyhedron* polyhedron) override;

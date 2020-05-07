@@ -77,7 +77,7 @@ HEADERS += \
     utils/factories/AbstractGeometryFactory.hpp \
     utils/factories/AbstractMaterialFactory.hpp \
     utils/factories/AbstractTransformFactory.hpp \
-    utils/factories/imp/DeloneGeometryFactory.h \
+    utils/factories/imp/MonotoneMethod_GeometryFactory.h \
     utils/factories/imp/SimpleGeometryFactory.h \
     utils/factories/imp/SimpleMaterialFactory.h \
     utils/factories/imp/SimpleTransformFactory.h
@@ -101,7 +101,7 @@ SOURCES += \
     utils/Adapter.cpp \
     utils/Centering.cpp \
     utils/EntityConstructor.cpp \
-    utils/factories/imp/DeloneGeometryFactory.cpp \
+    utils/factories/imp/MonotoneMethod_GeometryFactory.cpp \
     utils/factories/imp/SimpleGeometryFactory.cpp \
     utils/factories/imp/SimpleMaterialFactory.cpp \
     utils/factories/imp/SimpleTransformFactory.cpp
