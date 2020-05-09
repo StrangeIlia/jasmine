@@ -8,8 +8,8 @@ QGeometryRenderer* MonotoneMethod_GeometryFactory::create(Polyhedron* polyhedron
     MonotoneMethod_GeometryFactory::createIndexesAttribute(geometry, polyhedron);
     QGeometryRenderer *renderer = new QGeometryRenderer();
     renderer->setGeometry(geometry);
-    //renderer->setPrimitiveType(QGeometryRenderer::Triangles);
-    renderer->setPrimitiveType(QGeometryRenderer::Lines);
+    renderer->setPrimitiveType(QGeometryRenderer::Triangles);
+    //renderer->setPrimitiveType(QGeometryRenderer::Lines);
     return renderer;
 }
 
@@ -20,23 +20,23 @@ struct Triangle { unsigned short first, second, third; };
 bool isClockWise(Vector2D left, Vector2D center, Vector2D rigth) {
     Vector2D a, b;
     a.x = center.x - left.x;
-    b.x = rigth.x - center.x;
+    b.x = center.x - rigth.x;
     a.y = center.y - left.y;
-    b.y = rigth.y - center.y;
-    return (a.x * b.y - a.y * b.x) > 0;
+    b.y = center.y - rigth.y;
+    return (a.x * b.y - a.y * b.x) < 0;
 }
 
 /// На счет инверсии массива мы добиваемся того,
 /// что обхода по часовой стрелке можно добиться
 /// за счет возрастания значения индекса
 Triangle normalize(Triangle sourse, unsigned shift = 0) {
-    if(sourse.first < sourse.second) {
+    if(sourse.first > sourse.second) {
         std::swap(sourse.first, sourse.second);
     }
-    if(sourse.second < sourse.third) {
+    if(sourse.second > sourse.third) {
         std::swap(sourse.second, sourse.third);
     }
-    if(sourse.first < sourse.second) {
+    if(sourse.first > sourse.second) {
         std::swap(sourse.first, sourse.second);
     }
     sourse.first += shift;
@@ -54,10 +54,9 @@ Triangle normalize(Triangle sourse, unsigned shift = 0) {
            .
 
 void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
-    throw NotImplementedException();
-
     int shift = 0;
     int countPoints = 0;
+
     /// Буфер, хранящий номера точек
     QByteArray bufferIndexes;
 
@@ -89,39 +88,68 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
 
             std::function<Vector2D(unsigned)> selector;
 
+            /// Интересный факт
+            /// Для сохранения направления обхода нужно инвертировать
+            /// одну из осей, если направление нормали не совпадает с нормалью плоскости
             if(x > y && x > z) {
-                selector = [polygon] (unsigned i) -> Vector2D {
-                    Vertex v = polygon->vertex(i);
-                    return Vector2D{v.y, v.z};
-                };
+                // (0, 1, 0) x (0, 0, 1) = (1, 0, 0)
+                if(polygon->plane().A > 0) {
+                    selector = [polygon] (unsigned i) -> Vector2D {
+                        Vertex v = polygon->vertex(i);
+                        return Vector2D{v.y, v.z};
+                    };
+                } else {
+                    selector = [polygon] (unsigned i) -> Vector2D {
+                        Vertex v = polygon->vertex(i);
+                        return Vector2D{v.z, v.y};
+                    };
+                }
             } else if(y > z) {
-                selector = [polygon] (unsigned i) -> Vector2D {
-                    Vertex v = polygon->vertex(i);
-                    return Vector2D{v.x, v.z};
-                };
+                // (0, 0, 1) x (1, 0, 0) = (0, 1, 0)
+                if(polygon->plane().B > 0) {
+                    selector = [polygon] (unsigned i) -> Vector2D {
+                        Vertex v = polygon->vertex(i);
+                        return Vector2D{v.z, v.x};
+                    };
+                } else {
+                    selector = [polygon] (unsigned i) -> Vector2D {
+                        Vertex v = polygon->vertex(i);
+                        return Vector2D{v.x, v.z};
+                    };
+                }
             } else {
-                selector = [polygon] (unsigned i) -> Vector2D {
-                    Vertex v = polygon->vertex(i);
-                    return Vector2D{v.x, v.y};
-                };
+                // (1, 0, 0) x (0, 1, 0) = (0, 0, 1)
+                if(polygon->plane().C > 0) {
+                    selector = [polygon] (unsigned i) -> Vector2D {
+                        Vertex v = polygon->vertex(i);
+                        return Vector2D{v.x, v.y};
+                    };
+                } else {
+                    selector = [polygon] (unsigned i) -> Vector2D {
+                        Vertex v = polygon->vertex(i);
+                        return Vector2D{v.y, v.x};
+                    };
+                }
             }
 
             if(polygon->isClockwise()) {
-                for(int i = 0; i != points.size(); ++i) {
+                for(unsigned i = 0; i != points.size(); ++i) {
                     points[i] = selector(i);
                 }
             } else {
-                for(int i = 0; i != points.size(); ++i) {
+                for(unsigned i = 0; i != points.size(); ++i) {
                     points[i] = selector(points.size() - i - 1);
                 }
             }
-
 
             Vector2D* dataPtr = points.data();
 
             /// Для использования заметающей прямой, сортируем точки по невозрастанию 'y'
             std::sort(pointsIndexes.begin(), pointsIndexes.end(), [dataPtr](unsigned p1, unsigned p2) -> bool {
-                return dataPtr[p1].y > dataPtr[p2].y;
+                if(dataPtr[p1].y == dataPtr[p2].y)
+                    return dataPtr[p1].x < dataPtr[p2].x;
+                else
+                    return dataPtr[p1].y > dataPtr[p2].y;
             });
 
             QLinkedList<Edge> edges;
@@ -138,13 +166,21 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                 while(!edges.isEmpty() && dataPtr[edges.back().bottom].y > min_y) edges.removeLast();
             };
 
+            auto isBelow = [dataPtr](unsigned below, unsigned upper) {
+                if(dataPtr[below].y == dataPtr[upper].y) {
+                    return dataPtr[below].x > dataPtr[upper].x;
+                } else {
+                    return dataPtr[below].y < dataPtr[upper].y;
+                }
+            };
+
             for(int indexPoint = 0; indexPoint != pointsIndexes.size(); ++indexPoint)
             {
                 unsigned point = pointsIndexes[indexPoint];
                 unsigned leftPoint = (point + pointsIndexes.size() - 1) % pointsIndexes.size();
                 unsigned rightPoint = (point + 1) % pointsIndexes.size();
-                bool leftBelow = dataPtr[leftPoint].y < dataPtr[point].y;
-                bool rightBelow = dataPtr[rightPoint].y < dataPtr[point].y;
+                bool leftBelow = isBelow(leftPoint, point);  //dataPtr[leftPoint].y < dataPtr[point].y;
+                bool rightBelow = isBelow(rightPoint, point); //dataPtr[rightPoint].y <= dataPtr[point].y;
                 bool clockWise = isClockWise(dataPtr[leftPoint], dataPtr[point], dataPtr[rightPoint]);
                 /// Очищаем список ребер
                 clearEdges(point);
@@ -275,15 +311,14 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
 
             auto addPointToPolygon = [dataPtr, shift, &bufferIndexes] (MonotonePolygon& polygon, unsigned point, unsigned nextPoint) -> bool {
                 unsigned lastPoint;
-                bool isEndPoint;
+                bool isEndPoint = polygon.nextPoint_1 == polygon.nextPoint_2;
                 if(polygon.nextPoint_1 == point){
-                    isEndPoint = polygon.lastPoint_1 == polygon.lastPoint_2;
                     lastPoint = polygon.lastPoint_1;
                     polygon.lastPoint_1 = polygon.nextPoint_1;
                     polygon.nextPoint_1 = nextPoint;
                 } else if(polygon.nextPoint_2 == point) {
-                    isEndPoint = polygon.lastPoint_1 == polygon.lastPoint_2;
                     lastPoint = polygon.lastPoint_2;
+                    polygon.lastPoint_2 = polygon.nextPoint_2;
                     polygon.nextPoint_2 = nextPoint;
                 }
                 else {
@@ -297,7 +332,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                         unsigned top = polygon.stack.pop(); // Запоминаем точку с вершины стека
                         Triangle triangle;
                         triangle.first = point;
-                        triangle.second = top;
+                        triangle.third = top;
                         while(!polygon.stack.empty()) {
                             triangle.second = triangle.third;
                             triangle.third = polygon.stack.pop();
@@ -421,19 +456,20 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                 } else { /// Если точка не принадлежит к какому-нибудь добавленному ребру
                     unsigned leftPoint = (point + pointsIndexes.size() - 1) % pointsIndexes.size();
                     unsigned rightPoint = (point + 1) % pointsIndexes.size();
-                    bool leftBelow = dataPtr[leftPoint].y < dataPtr[point].y;
-                    bool rigthBelow = dataPtr[edgeBegin->bottom].y < dataPtr[point].y;
+                    bool leftBelow = isBelow(leftPoint, point);  //dataPtr[leftPoint].y < dataPtr[point].y;
+                    bool rightBelow = isBelow(rightPoint, point); //dataPtr[rightPoint].y < dataPtr[point].y;
 
-                    if(leftBelow != rigthBelow) { /// Промежуточная вершина
+                    if(leftBelow != rightBelow) { /// Промежуточная вершина
                         /// Следующая точка должна быть обязательно не выше
-                        unsigned belowPoint = leftBelow ? leftPoint : edgeBegin->bottom;
+                        unsigned belowPoint = leftBelow ? leftPoint : rightPoint;
                         auto polygonIter = polygons.begin();
                         while(polygonIter != polygons.end()) {
                             if(addPointToPolygon(*polygonIter, point, belowPoint))
                                 break;
                             ++polygonIter;
                         }
-                    } else if(leftBelow) { /// Если start и
+                    } else if(leftBelow) {
+                        /// Если start
                         /// Добавляем новый многоугольник
                         polygons.append(MonotonePolygon(point, leftPoint, rightPoint));
                     } else { /// Если end

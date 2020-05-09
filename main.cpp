@@ -19,6 +19,7 @@
 #include "utils/factories/imp/SimpleGeometryFactory.h"
 #include "utils/factories/imp/SimpleMaterialFactory.h"
 #include "utils/factories/imp/SimpleTransformFactory.h"
+#include "utils/factories/imp/MonotoneMethod_GeometryFactory.h"
 
 #include "utils/Adapter.h"
 #include "utils/Activator.h"
@@ -29,11 +30,10 @@ namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
 
-
-    quint64 bigRand();
-    quint64 MAX_BIG_RAND_VALUE = 0xFFFFFFFFFFFFFFFl;
-
-    Tree* createRandomSurface(Plane plane, int pointsCount);
+    typedef Vertex Convertor(Vertex);
+    Vertex simpleConvertor(Vertex);
+    Tree* text_ComplesSurface_1(Convertor = simpleConvertor);
+    Tree* text_ComplesSurface_2(Convertor = simpleConvertor);
 }
 
 using namespace bstu;
@@ -49,7 +49,11 @@ int main(int argc, char *argv[])
     //Tree* tree = create_greenhouse(10);
     //tree->restructure();
 
-    Tree* tree = createRandomSurface(Plane(0.8, 0, 0.6, 3), 30);
+    Tree* tree =
+            //text_ComplesSurface_1();
+            text_ComplesSurface_2();
+            //create_box();
+            //create_greenhouse(10);
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -65,7 +69,10 @@ int main(int argc, char *argv[])
     /// Инициализация источника освещения и камеры
     new SelectorInitializer(view);
 
-    AbstractGeometryFactory* geometryFactory = new SimpleGeometryFactory();
+    AbstractGeometryFactory* geometryFactory =
+            //new SimpleGeometryFactory();
+            new MonotoneMethod_GeometryFactory();
+            //new Contour_GeometryFactory();
     AbstractMaterialFactory* materialFactory = new SimpleMaterialFactory(view->rootEntity());
     AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
 
@@ -208,29 +215,64 @@ Tree* create_greenhouse(int n)
     return tree;
 }
 
-quint64 bigRand() {
-    quint64 result = rand();
-    result <<= 15; result |= rand();
-    result <<= 15; result |= rand();
-    result <<= 15; result |= rand();
-    return result; //60 bits random;
+Vertex simpleConvertor(Vertex sourse) {
+    return sourse;
 }
 
-Tree* createRandomSurface(Plane plane, int pointsCount) {
-    if(pointsCount < 1) return nullptr;
-    std::vector<Vertex> vertices(pointsCount);
-    for(int i = 0; i < pointsCount; ++i) {
-        Vertex vertex;
-        vertex.x = bigRand() * 1.0 / MAX_BIG_RAND_VALUE * 10.0;
-        vertex.y = bigRand() * 1.0 / MAX_BIG_RAND_VALUE * 10.0;
-        vertex.z = -(plane.D + plane.A * vertex.x + plane.B * vertex.y) / plane.C;
-        vertices[i] = vertex;
+Tree* text_ComplesSurface_1(Convertor convertor) {
+    int vertexCount = 15;
+    Vertex* vertexes = new Vertex[vertexCount];
+    vertexes[0].x = 15;   vertexes[0].y = 8;
+    vertexes[1].x = 13;   vertexes[1].y = 9;
+    vertexes[2].x = 12;   vertexes[2].y = 15;
+    vertexes[3].x = 9;    vertexes[3].y = 13;
+    vertexes[4].x = 7;    vertexes[4].y = 14;
+    vertexes[5].x = 3;    vertexes[5].y = 12;
+    vertexes[6].x = 6;    vertexes[6].y = 11;
+    vertexes[7].x = 5;    vertexes[7].y = 7;
+    vertexes[8].x = 2;    vertexes[8].y = 10;
+    vertexes[9].x = 1;    vertexes[9].y = 4;
+    vertexes[10].x = 4;   vertexes[10].y = 2;
+    vertexes[11].x = 8;   vertexes[11].y = 3;
+    vertexes[12].x = 11;  vertexes[12].y = 1;
+    vertexes[13].x = 10;  vertexes[13].y = 6;
+    vertexes[14].x = 14;  vertexes[14].y = 5;
+
+    for(int i = 0; i != vertexCount; ++i) {
+        vertexes[i].z = 0;
+        vertexes[i] = convertor(vertexes[i]);
     }
-    VolumePolygon** P = new VolumePolygon*[1];
-    P[0] = new VolumePolygon(std::move(vertices));
-    Polyhedron* polyhedron = new Polyhedron(P, 1);
+
+    int polygonsCount = 1;
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    polygons[0] = new VolumePolygon(vertexes, vertexCount);
     Tree* tree = new Tree();
-    tree->addPolyhedron(polyhedron);
+    tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
+    return tree;
+}
+
+Tree* text_ComplesSurface_2(Convertor convertor) {
+    int vertexCount = 8;
+    Vertex* vertexes = new Vertex[vertexCount];
+    vertexes[0].x = 0;   vertexes[0].y = 4;
+    vertexes[1].x = 0;   vertexes[1].y = 1;
+    vertexes[2].x = 1;   vertexes[2].y = 2;
+    vertexes[3].x = 2;   vertexes[3].y = 0;
+    vertexes[4].x = 3;   vertexes[4].y = 2;
+    vertexes[5].x = 4;   vertexes[5].y = 1;
+    vertexes[6].x = 4;   vertexes[6].y = 4;
+    vertexes[7].x = 2;   vertexes[7].y = 3;
+
+    for(int i = 0; i != vertexCount; ++i) {
+        vertexes[i].z = 0;
+        vertexes[i] = convertor(vertexes[i]);
+    }
+
+    int polygonsCount = 1;
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    polygons[0] = new VolumePolygon(vertexes, vertexCount);
+    Tree* tree = new Tree();
+    tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
     return tree;
 }
 
