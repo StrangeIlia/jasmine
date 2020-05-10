@@ -190,13 +190,15 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                         Edge leftEdge, rigthEdge;
                         {
                             Vector2D current = dataPtr[point];
-                            float left_x = std::numeric_limits<float>::min();
+                            float left_x = -std::numeric_limits<float>::max();
                             float rigth_x = std::numeric_limits<float>::max();
                             /// Ищем ближайшие ребра
                             for(auto iter = edges.begin(); iter != edges.end(); ++iter) {
+                                if(iter->top == point || iter->bottom == point) continue;
+
                                 Vector2D top = dataPtr[iter->top];
                                 Vector2D bottom = dataPtr[iter->bottom];
-                                float intersection = top.x + (top.x - bottom.x) / (top.y - bottom.y) * (top.y - current.y);
+                                float intersection = top.x + (bottom.x - top.x) / (bottom.y - top.y) * (current.y - top.y);
                                 if(intersection < current.x && intersection > left_x) {
                                     left_x = intersection;
                                     leftEdge = *iter;
@@ -237,7 +239,6 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                             }
                             if(pointsIndexes[max] == minPoint) {
                                 appendedEdges.push_back(Edge{minPoint, point});
-                                break;
                             }
                         } else { // merge вершина !(rigthBelow || leftBelow)
                             unsigned minPoint;
@@ -268,7 +269,6 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                             }
                             if(pointsIndexes[max] == minPoint) {
                                 appendedEdges.push_back(Edge{point, minPoint});
-                                break;
                             }
                         }
                     }
@@ -405,7 +405,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                     /// point будет start точкой
 
                     auto polygonIter = polygons.begin();
-                    QLinkedList<MonotonePolygon>::iterator firstPolygon = polygons.end(), secondPolygon;
+                    QLinkedList<MonotonePolygon>::iterator firstPolygon = polygons.end(), secondPolygon = polygons.end();
                     while(polygonIter != polygons.end()) {
                         if(polygonIter->nextPoint_1 == point || polygonIter->nextPoint_2 == point) {
                             if(firstPolygon == polygons.end()) {
@@ -441,10 +441,12 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
 
                     if(fx < sx) { /// Первый полигон левый
                         addPointToPolygon(*firstPolygon, point, leftEdge->bottom);
-                        addPointToPolygon(*secondPolygon, point, rightEdge->bottom);
+                        if(secondPolygon != polygons.end())
+                            addPointToPolygon(*secondPolygon, point, rightEdge->bottom);
                     } else { /// Первый полигон правый
                         addPointToPolygon(*firstPolygon, point, rightEdge->bottom);
-                        addPointToPolygon(*secondPolygon, point, leftEdge->bottom);
+                        if(secondPolygon != polygons.end())
+                            addPointToPolygon(*secondPolygon, point, leftEdge->bottom);
                     }
 
                     /// Добавляем новые полигоны

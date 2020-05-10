@@ -32,8 +32,9 @@ namespace bstu {
 
     typedef Vertex Convertor(Vertex);
     Vertex simpleConvertor(Vertex);
-    Tree* text_ComplesSurface_1(Convertor = simpleConvertor);
-    Tree* text_ComplesSurface_2(Convertor = simpleConvertor);
+    Tree* test_ComplesSurface_1(Convertor = simpleConvertor);
+    Tree* test_ComplesSurface_2(Convertor = simpleConvertor);
+    Tree* test_ComplesSurface_3(Convertor = simpleConvertor);
 }
 
 using namespace bstu;
@@ -50,10 +51,11 @@ int main(int argc, char *argv[])
     //tree->restructure();
 
     Tree* tree =
-            //text_ComplesSurface_1();
-            text_ComplesSurface_2();
-            //create_box();
-            //create_greenhouse(10);
+            //test_ComplesSurface_1();
+            test_ComplesSurface_2();
+            //test_ComplesSurface_3(); // Работает
+            //create_box(); // Работает
+            //create_greenhouse(10); // Работает
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -219,7 +221,7 @@ Vertex simpleConvertor(Vertex sourse) {
     return sourse;
 }
 
-Tree* text_ComplesSurface_1(Convertor convertor) {
+Tree* test_ComplesSurface_1(Convertor convertor) {
     int vertexCount = 15;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 15;   vertexes[0].y = 8;
@@ -251,7 +253,7 @@ Tree* text_ComplesSurface_1(Convertor convertor) {
     return tree;
 }
 
-Tree* text_ComplesSurface_2(Convertor convertor) {
+Tree* test_ComplesSurface_2(Convertor convertor) {
     int vertexCount = 8;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 0;   vertexes[0].y = 4;
@@ -262,6 +264,28 @@ Tree* text_ComplesSurface_2(Convertor convertor) {
     vertexes[5].x = 4;   vertexes[5].y = 1;
     vertexes[6].x = 4;   vertexes[6].y = 4;
     vertexes[7].x = 2;   vertexes[7].y = 3;
+
+    for(int i = 0; i != vertexCount; ++i) {
+        vertexes[i].z = 0;
+        vertexes[i] = convertor(vertexes[i]);
+    }
+
+    int polygonsCount = 1;
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    polygons[0] = new VolumePolygon(vertexes, vertexCount);
+    Tree* tree = new Tree();
+    tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
+    return tree;
+}
+
+Tree* test_ComplesSurface_3(Convertor convertor) {
+    int vertexCount = 5;
+    Vertex* vertexes = new Vertex[vertexCount];
+    vertexes[0].x = 0;   vertexes[0].y = 7;
+    vertexes[1].x = 3;   vertexes[1].y = 5;
+    vertexes[2].x = 3;   vertexes[2].y = 0;
+    vertexes[3].x = 2;   vertexes[3].y = 3;
+    vertexes[4].x = 0;   vertexes[4].y = 2;
 
     for(int i = 0; i != vertexCount; ++i) {
         vertexes[i].z = 0;
