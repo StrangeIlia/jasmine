@@ -45,14 +45,6 @@ Triangle normalize(Triangle sourse, unsigned shift = 0) {
     return sourse;
 }
 
-/// Оставь надежду, всяк сюда входящий
-/// Метод не работает, если есть 3 рядом лежащие точки,
-/// находящиеся на одной высоте
-// .
-//  \._._.
-//        \
-           .
-
 void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
     int shift = 0;
     int countPoints = 0;
@@ -174,9 +166,10 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                 }
             };
 
-            for(int indexPoint = 0; indexPoint != pointsIndexes.size(); ++indexPoint)
+            for(unsigned indexPoint = 0; indexPoint != pointsIndexes.size(); ++indexPoint)
             {
                 unsigned point = pointsIndexes[indexPoint];
+                /// Это не правая и левая точка по x или y, это правая и левая по обходу
                 unsigned leftPoint = (point + pointsIndexes.size() - 1) % pointsIndexes.size();
                 unsigned rightPoint = (point + 1) % pointsIndexes.size();
                 bool leftBelow = isBelow(leftPoint, point);  //dataPtr[leftPoint].y < dataPtr[point].y;
@@ -307,7 +300,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
 
             Edge *edgeBegin = appendedEdges.data();
             Edge *edgeEnd = edgeBegin + appendedEdges.size();
-            QLinkedList<MonotonePolygon> polygons;
+            QLinkedList<MonotonePolygon> polygons;          
 
             auto addPointToPolygon = [dataPtr, shift, &bufferIndexes] (MonotonePolygon& polygon, unsigned point, unsigned nextPoint) -> bool {
                 unsigned lastPoint;
@@ -346,48 +339,36 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                         polygon.stack.push(top);
 
                     } else {
-                        // Если точка является продолжением дуги
-                        /// Тут немного отсебятины
-                        /// Думаю, это немного улучшит работу алгоритма
-                        ///
-                        /// По алгоритму мы должны были добавляет треугольники, пока
-                        /// они удовлетворяют условию isClockWise, но это относительно
-                        /// дорогая операция, поэтому можно проще
-                        ///
-
                         Triangle triangle;
                         triangle.first = point;
                         triangle.second = polygon.stack.pop(); // Запоминаем точку с вершины стека
-                        triangle.third = polygon.stack.pop(); // берем еще одну точку из стека
-
-                        bool sign_1 = (dataPtr[triangle.third].x - dataPtr[triangle.second].x) < 0;
-                        bool sign_2 = (dataPtr[triangle.second].x - dataPtr[triangle.first].x) < 0;
-
-                        // Если добавляемая точка меняет направление
-                        /// Мы как бы срезаем углы, которые нарушают монотонность по x
-                        /// Таким образом, многоугольник будет монотонен по x и по y,
-                        /// что позволяет "срезать" треугольники по первому условию,
-                        /// которое "девешле" в обработке
-                        while(sign_1 != sign_2) {
+                        triangle.third = polygon.stack.top(); // берем еще одну точку из стека
+                        while(true) {
                             Triangle result = normalize(triangle, shift);
-                            bufferIndexes.append((char*)&result, sizeof(unsigned short) * 3);
-                            triangle.second = triangle.third;
-                            triangle.third = polygon.stack.pop();
-                            sign_1 = (dataPtr[triangle.third].x - dataPtr[triangle.second].x) < 0;
-                            sign_2 = (dataPtr[triangle.second].x - dataPtr[triangle.first].x) < 0;
+                            if(isClockWise(dataPtr[result.first], dataPtr[result.second], dataPtr[result.third])) {
+                                bufferIndexes.append((char*)&result, sizeof(unsigned short) * 3);
+                                triangle.second = triangle.third;
+                                polygon.stack.pop();
+                                if(polygon.stack.empty()) break;
+                                triangle.third = polygon.stack.top();
+                            } else break;
                         }
-
-                        polygon.stack.push(triangle.third);
                         polygon.stack.push(triangle.second);
-                        polygon.stack.push(point);
+                        polygon.stack.push(triangle.first);
                     }
                 }
                 return true;
             };
 
-            for(int indexPoint = 0; indexPoint != pointsIndexes.size(); ++indexPoint)
+
+
+            for(unsigned indexPoint = 0; indexPoint != pointsIndexes.size(); ++indexPoint)
             {
                 unsigned point = pointsIndexes[indexPoint];
+                unsigned leftPoint = (point + pointsIndexes.size() - 1) % pointsIndexes.size();
+                unsigned rightPoint = (point + 1) % pointsIndexes.size();
+                bool leftBelow = isBelow(leftPoint, point);  //dataPtr[leftPoint].y < dataPtr[point].y;
+                bool rightBelow = isBelow(rightPoint, point); //dataPtr[rightPoint].y < dataPtr[point].y;
 
                 /// Если точка соединена с добавленным ребром
                 if(edgeBegin != edgeEnd && point == edgeBegin->top) {
@@ -398,55 +379,74 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                     }
                     Edge *rightEdge = edgeBegin - 1;
 
+                    /// Если ребер несколько, тогда необходимо определить какая
+                    /// точка левее, а какая правее по x
+                    if(leftEdge != rightEdge) {
+                        float lx, rx;
+                        Vector2D lp = dataPtr[leftPoint];
+                        Vector2D rp = dataPtr[rightPoint];
+                        Vector2D p = dataPtr[point];
+
+                        if(lp.y == 0.0f || rp.y == 0.0f) { // Обработка исключительного условия
+                            lx = lp.x;
+                            rx = rp.x;
+                        } else {
+                            lx = (lp.x - p.x) / lp.y;
+                            rx = (rp.x - p.x) / rp.y;
+                        }
+                        if(rx < lx) {
+                            std::swap(leftPoint, rightPoint);
+                            std::swap(leftBelow, rightBelow);
+                        }
+                    }
+
                     /// Из условий следует, что для правого и левого многоугольника
                     /// point будет промежуточной стороной, следовательно
                     /// следующая точка будет leftEdge->bottom и rigthEdge->bottom.
                     /// Остальные стороны образуют новые многоугольники, для которых
                     /// point будет start точкой
-
-                    auto polygonIter = polygons.begin();
-                    QLinkedList<MonotonePolygon>::iterator firstPolygon = polygons.end(), secondPolygon = polygons.end();
-                    while(polygonIter != polygons.end()) {
-                        if(polygonIter->nextPoint_1 == point || polygonIter->nextPoint_2 == point) {
-                            if(firstPolygon == polygons.end()) {
-                                firstPolygon = polygonIter;
-                            } else {
-                                secondPolygon = polygonIter;
-                                break;
+                    /// Однако, если левая вершина ниже, то нет "левого" многоугольника (он не обязательно слево)
+                    /// А если правая вершина ниже, то нет
+                    /// Также есть проблема, если есть оба многоугольника
+                    if(!(leftBelow || rightBelow)) {
+                        /// Поиск многоугольников
+                        auto polygonIter = polygons.begin();
+                        bool findFirstPolygon = false;
+                        while(polygonIter != polygons.end()) {
+                            if(polygonIter->nextPoint_1 == point || polygonIter->nextPoint_2 == point) {
+                                if(polygonIter->lastPoint_1 == leftPoint || polygonIter->lastPoint_2 == leftPoint) {
+                                    addPointToPolygon(*polygonIter, point, leftEdge->bottom);
+                                } else {
+                                    addPointToPolygon(*polygonIter, point, rightEdge->bottom);
+                                }
+                                if(findFirstPolygon) break;
+                                findFirstPolygon = true;
                             }
-                        }
-                        ++polygonIter;
-                    }
-
-                    float fx, sx;
-                    /// Если ребро одно
-                    if(leftEdge != rightEdge) {
-                        Vector2D *fp = dataPtr + firstPolygon->stack.first();
-                        Vector2D *sp = dataPtr + secondPolygon->stack.first();
-                        Vector2D *p = dataPtr + point;
-
-                        if(fp->y == 0.0f || sp->y == 0.0f) { // Обработка исключительного условия
-                            fx = fp->x;
-                            sx = sp->x;
-                        } else {
-                            fx = (fp->x - p->x) / fp->y;
-                            sx = (sp->x - p->x) / sp->y;
+                            ++polygonIter;
                         }
                     } else {
-                        /// Без разницы, какой полигон правый, а какой левый,
-                        /// поэтому можно использовать любые числа
-                        fx = -1;
-                        sx =  1;
-                    }
-
-                    if(fx < sx) { /// Первый полигон левый
-                        addPointToPolygon(*firstPolygon, point, leftEdge->bottom);
-                        if(secondPolygon != polygons.end())
-                            addPointToPolygon(*secondPolygon, point, rightEdge->bottom);
-                    } else { /// Первый полигон правый
-                        addPointToPolygon(*firstPolygon, point, rightEdge->bottom);
-                        if(secondPolygon != polygons.end())
-                            addPointToPolygon(*secondPolygon, point, leftEdge->bottom);
+                        if(leftBelow && rightBelow) {
+                            polygons.append(MonotonePolygon(point, leftPoint, leftEdge->bottom));
+                            polygons.append(MonotonePolygon(point, rightBelow, rightEdge->bottom));
+                        } else if(leftBelow) {
+                            auto polygonIter = polygons.begin();
+                            while(polygonIter != polygons.end()) {
+                                if(addPointToPolygon(*polygonIter, point, rightEdge->bottom)) {
+                                    break;
+                                }
+                                ++polygonIter;
+                            }
+                            polygons.append(MonotonePolygon(point, leftPoint, leftEdge->bottom));
+                        } else {
+                            auto polygonIter = polygons.begin();
+                            while(polygonIter != polygons.end()) {
+                                if(addPointToPolygon(*polygonIter, point, leftEdge->bottom)) {
+                                    break;
+                                }
+                                ++polygonIter;
+                            }
+                            polygons.append(MonotonePolygon(point, leftPoint, leftEdge->bottom));
+                        }
                     }
 
                     /// Добавляем новые полигоны
@@ -455,11 +455,11 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                         ++leftEdge;
                     }
 
-                } else { /// Если точка не принадлежит к какому-нибудь добавленному ребру
-                    unsigned leftPoint = (point + pointsIndexes.size() - 1) % pointsIndexes.size();
-                    unsigned rightPoint = (point + 1) % pointsIndexes.size();
-                    bool leftBelow = isBelow(leftPoint, point);  //dataPtr[leftPoint].y < dataPtr[point].y;
-                    bool rightBelow = isBelow(rightPoint, point); //dataPtr[rightPoint].y < dataPtr[point].y;
+                } else {
+                    auto polygonIter = polygons.begin();
+                    while(polygonIter != polygons.end()) {
+                        if()
+                    }
 
                     if(leftBelow != rightBelow) { /// Промежуточная вершина
                         /// Следующая точка должна быть обязательно не выше
