@@ -17,6 +17,39 @@ struct Vector2D { float x, y; };
 struct Edge { unsigned top; unsigned bottom; };
 struct Triangle { unsigned short first, second, third; };
 
+struct MonotonePolygon {
+    unsigned afterTheEnd, beforeTheBeginning; /// Следующие точки
+    QStack<unsigned> stack; /// Стек вершин, которые не были триангулированы
+
+    explicit MonotonePolygon(unsigned point, unsigned next_1, unsigned next_2) {
+        afterTheEnd = next_1;
+        beforeTheBeginning = next_2;
+        stack.push(point);
+    }
+
+    inline bool requiresTheLastPoint() const {
+        return afterTheEnd == beforeTheBeginning;
+    }
+
+    inline bool isLastPoint(unsigned point) {
+        return afterTheEnd == point && beforeTheBeginning == point;
+    }
+
+    inline bool isNextPoint(unsigned point) {
+        return afterTheEnd == point || beforeTheBeginning == point;
+    }
+
+    inline unsigned giveThePreviousPoint(unsigned point) {
+        if(afterTheEnd == point) {
+            return stack.last(); // <=> stack.top()
+        } else {
+            return stack.first();
+        }
+    }
+
+};
+
+
 bool isClockWise(Vector2D left, Vector2D center, Vector2D rigth) {
     Vector2D a, b;
     a.x = center.x - left.x;
@@ -284,209 +317,262 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                     return dataPtr[e1.top].y > dataPtr[e2.top].y;
             });
 
-            struct MonotonePolygon {
-                unsigned lastPoint_1, lastPoint_2; /// Предыдущие точки
-                unsigned nextPoint_1, nextPoint_2; /// Следующие точки
-                QStack<unsigned> stack; /// Стек вершин, которые не были триангулированы
 
-                explicit MonotonePolygon(unsigned point, unsigned next_1, unsigned next_2) {
-                    lastPoint_1 = point;
-                    lastPoint_2 = point;
-                    nextPoint_1 = next_1;
-                    nextPoint_2 = next_2;
-                    stack.push(point);
-                }
-            };
 
             Edge *edgeBegin = appendedEdges.data();
             Edge *edgeEnd = edgeBegin + appendedEdges.size();
-            QLinkedList<MonotonePolygon> polygons;          
+            QHash<unsigned, MonotonePolygon*> hash; // Ключ - ожидаемая точка
 
-            auto addPointToPolygon = [dataPtr, shift, &bufferIndexes] (MonotonePolygon& polygon, unsigned point, unsigned nextPoint) -> bool {
-                unsigned lastPoint;
-                bool isEndPoint = polygon.nextPoint_1 == polygon.nextPoint_2;
-                if(polygon.nextPoint_1 == point){
-                    lastPoint = polygon.lastPoint_1;
-                    polygon.lastPoint_1 = polygon.nextPoint_1;
-                    polygon.nextPoint_1 = nextPoint;
-                } else if(polygon.nextPoint_2 == point) {
-                    lastPoint = polygon.lastPoint_2;
-                    polygon.lastPoint_2 = polygon.nextPoint_2;
-                    polygon.nextPoint_2 = nextPoint;
-                }
-                else {
+            auto createNewPolygon = [&hash] (unsigned point, unsigned next_1, unsigned next_2) -> void {
+                MonotonePolygon* result = new MonotonePolygon(point, next_1, next_2);
+                hash.insertMulti(next_1, result);
+                hash.insertMulti(next_2, result);
+            };
+
+            auto addPointToPolygon = [dataPtr, shift, &bufferIndexes] (MonotonePolygon* polygon, unsigned point, unsigned nextPoint) -> bool {
+                if(polygon->beforeTheBeginning != point && polygon->afterTheEnd != point) {
                     return false;
                 }
-                if(polygon.stack.size() < 2) {
-                    polygon.stack.push(point);
-                } else {
-                    if(lastPoint != polygon.stack.top() || isEndPoint) {
+                if(polygon->stack.size() < 2) {
+                    polygon->stack.push(point);
+                    if(polygon->beforeTheBeginning == point){
+                        polygon->beforeTheBeginning = polygon->afterTheEnd;
+                    }
+                    polygon->afterTheEnd = nextPoint;
+                }
+                else {
+                    if(polygon->beforeTheBeginning == point) {
                         // Если точка не является продолжением дуги или является последней точкой в полигоне
-                        unsigned top = polygon.stack.pop(); // Запоминаем точку с вершины стека
+                        unsigned top = polygon->stack.pop(); // Запоминаем точку с вершины стека
                         Triangle triangle;
                         triangle.first = point;
                         triangle.third = top;
-                        while(!polygon.stack.empty()) {
+                        while(!polygon->stack.empty()) {
                             triangle.second = triangle.third;
-                            triangle.third = polygon.stack.pop();
+                            triangle.third = polygon->stack.pop();
                             Triangle result = normalize(triangle, shift);
                             bufferIndexes.append((char*)&result, sizeof(unsigned short) * 3);
                         }
                         /// Для последней точки это ничего не значит,
                         /// но на дальнейшую работу это не повлияет (объект будет удален),
                         /// а делать отдельную проверку для редкого события такое себе
-                        polygon.stack.push(point);
-                        polygon.stack.push(top);
-
+                        polygon->stack.push(point);
+                        polygon->stack.push(top);
+                        polygon->beforeTheBeginning = nextPoint;
                     } else {
+                        // Если точка является продолжением дуги
                         Triangle triangle;
                         triangle.first = point;
-                        triangle.second = polygon.stack.pop(); // Запоминаем точку с вершины стека
-                        triangle.third = polygon.stack.top(); // берем еще одну точку из стека
+                        triangle.second = polygon->stack.pop(); // Запоминаем точку с вершины стека
+                        triangle.third = polygon->stack.top(); // берем еще одну точку из стека
                         while(true) {
                             Triangle result = normalize(triangle, shift);
                             if(isClockWise(dataPtr[result.first], dataPtr[result.second], dataPtr[result.third])) {
                                 bufferIndexes.append((char*)&result, sizeof(unsigned short) * 3);
                                 triangle.second = triangle.third;
-                                polygon.stack.pop();
-                                if(polygon.stack.empty()) break;
-                                triangle.third = polygon.stack.top();
+                                polygon->stack.pop();
+                                if(polygon->stack.empty()) break;
+                                triangle.third = polygon->stack.top();
                             } else break;
                         }
-                        polygon.stack.push(triangle.second);
-                        polygon.stack.push(triangle.first);
+                        polygon->stack.push(triangle.second);
+                        polygon->stack.push(triangle.first);
+                        polygon->afterTheEnd = nextPoint;
                     }
                 }
                 return true;
             };
 
-
+            auto addToHash = [&hash] (MonotonePolygon* polygon, unsigned nextPoint) {
+                if(!polygon->requiresTheLastPoint())
+                    hash.insertMulti(nextPoint, polygon);
+            };
 
             for(unsigned indexPoint = 0; indexPoint != pointsIndexes.size(); ++indexPoint)
             {
                 unsigned point = pointsIndexes[indexPoint];
                 unsigned leftPoint = (point + pointsIndexes.size() - 1) % pointsIndexes.size();
                 unsigned rightPoint = (point + 1) % pointsIndexes.size();
-                bool leftBelow = isBelow(leftPoint, point);  //dataPtr[leftPoint].y < dataPtr[point].y;
-                bool rightBelow = isBelow(rightPoint, point); //dataPtr[rightPoint].y < dataPtr[point].y;
 
-                /// Если точка соединена с добавленным ребром
-                if(edgeBegin != edgeEnd && point == edgeBegin->top) {
-                    Edge *leftEdge = edgeBegin;
-                    ++edgeBegin;
+                auto polygonsRange = hash.equal_range(point);
+                /// Если точка не принадлежит ни одному полигону
+                /// то она является точкой start
+                if(polygonsRange.first == hash.end()) {
+                    if(edgeBegin != edgeEnd && point == edgeBegin->top)
+                    {
+                        /// Если ребер несколько
+                        if(edgeBegin + 1 != edgeEnd && point == (edgeBegin + 1)->top) {
+                            float lx, rx;
+                            Vector2D lp = dataPtr[leftPoint];
+                            Vector2D rp = dataPtr[rightPoint];
+                            Vector2D p = dataPtr[point];
+
+                            if(lp.y == p.y || rp.y == p.y) { // Обработка исключительного условия
+                                lx = lp.x;
+                                rx = rp.x;
+                            } else {
+                                lx = (lp.x - p.x) / std::abs(lp.y - p.y);
+                                rx = (rp.x - p.x) / std::abs(rp.y - p.y);
+                            }
+                            if(rx < lx) {
+                                std::swap(leftPoint, rightPoint);
+                            }
+                        }
+
+                        while(edgeBegin != edgeEnd && point == edgeBegin->top) {
+                            createNewPolygon(point, leftPoint, edgeBegin->bottom);
+                            leftPoint = edgeBegin->bottom;
+                        }
+                    }
+                    createNewPolygon(point, leftPoint, rightPoint);
+                } else {
+                    /// Иначе она может быть
+                    /// 1) Start - если есть несколько ребер, выходящих из точки
+                    /// 2) Промежуточной
+                    /// 3) End точкой
+
+                    auto startEdge = edgeBegin;
                     while(edgeBegin != edgeEnd && point == edgeBegin->top) {
                         ++edgeBegin;
                     }
-                    Edge *rightEdge = edgeBegin - 1;
+                    auto endEdge = edgeBegin;
 
-                    /// Если ребер несколько, тогда необходимо определить какая
-                    /// точка левее, а какая правее по x
-                    if(leftEdge != rightEdge) {
-                        float lx, rx;
-                        Vector2D lp = dataPtr[leftPoint];
-                        Vector2D rp = dataPtr[rightPoint];
-                        Vector2D p = dataPtr[point];
+                    /// Может быть не больше двух боковых полигонов
+                    MonotonePolygon *firstPolygon = nullptr, *secondPolygon = nullptr;
 
-                        if(lp.y == 0.0f || rp.y == 0.0f) { // Обработка исключительного условия
-                            lx = lp.x;
-                            rx = rp.x;
+                    while(polygonsRange.first != polygonsRange.second) {
+                        MonotonePolygon* polygon = polygonsRange.first.value();
+                        if(polygon->requiresTheLastPoint()) {
+                            /// значение next не имеет значения
+                            /// поскольку этот многоугольник мы удалим
+                            addPointToPolygon(polygon, point, 0);
+                            /// Удаляем многоугольник, поскольку мы больше не будем его обрабатывать
+                            delete polygon;
                         } else {
-                            lx = (lp.x - p.x) / lp.y;
-                            rx = (rp.x - p.x) / rp.y;
-                        }
-                        if(rx < lx) {
-                            std::swap(leftPoint, rightPoint);
-                            std::swap(leftBelow, rightBelow);
-                        }
-                    }
-
-                    /// Из условий следует, что для правого и левого многоугольника
-                    /// point будет промежуточной стороной, следовательно
-                    /// следующая точка будет leftEdge->bottom и rigthEdge->bottom.
-                    /// Остальные стороны образуют новые многоугольники, для которых
-                    /// point будет start точкой
-                    /// Однако, если левая вершина ниже, то нет "левого" многоугольника (он не обязательно слево)
-                    /// А если правая вершина ниже, то нет
-                    /// Также есть проблема, если есть оба многоугольника
-                    if(!(leftBelow || rightBelow)) {
-                        /// Поиск многоугольников
-                        auto polygonIter = polygons.begin();
-                        bool findFirstPolygon = false;
-                        while(polygonIter != polygons.end()) {
-                            if(polygonIter->nextPoint_1 == point || polygonIter->nextPoint_2 == point) {
-                                if(polygonIter->lastPoint_1 == leftPoint || polygonIter->lastPoint_2 == leftPoint) {
-                                    addPointToPolygon(*polygonIter, point, leftEdge->bottom);
-                                } else {
-                                    addPointToPolygon(*polygonIter, point, rightEdge->bottom);
-                                }
-                                if(findFirstPolygon) break;
-                                findFirstPolygon = true;
+                            if(firstPolygon == nullptr) {
+                                firstPolygon = polygon;
+                            } else {
+                                secondPolygon = polygon;
                             }
-                            ++polygonIter;
+                        }
+                        ++polygonsRange.first;
+                    }
+                    hash.remove(point);
+
+                    /// Если есть добавленные ребра
+                    if(startEdge != endEdge) {
+                        --endEdge;
+                        /// Если ребер больше двух
+                        if(startEdge != endEdge) {
+                            float lx, rx;
+                            Vector2D lp = dataPtr[leftPoint];
+                            Vector2D rp = dataPtr[rightPoint];
+                            Vector2D p = dataPtr[point];
+
+                            if(lp.y == p.y || rp.y == p.y) { // Обработка исключительного условия
+                                lx = lp.x;
+                                rx = rp.x;
+                            } else {
+                                lx = (lp.x - p.x) / std::abs(lp.y - p.y);
+                                rx = (rp.x - p.x) / std::abs(rp.y - p.y);
+                            }
+                            if(rx < lx) {
+                                std::swap(leftPoint, rightPoint);
+                            }
+                        }
+                        if(firstPolygon == nullptr) {
+                            /// оба боковых полигона не созданы
+                            createNewPolygon(point, leftPoint, startEdge->bottom);
+                            createNewPolygon(point, rightPoint, endEdge->bottom);
+                        } else {
+                            if(secondPolygon == nullptr) {
+                                if(leftPoint == firstPolygon->giveThePreviousPoint(point)) {
+                                    addPointToPolygon(firstPolygon, point, startEdge->bottom);
+                                    addToHash(firstPolygon, startEdge->bottom);
+                                    createNewPolygon(point, rightPoint, endEdge->bottom);
+                                } else {
+                                    addPointToPolygon(firstPolygon, point, endEdge->bottom);
+                                    addToHash(firstPolygon, endEdge->bottom);
+                                    createNewPolygon(point, leftPoint, startEdge->bottom);
+                                }
+                            } else {
+                                MonotonePolygon *leftPolygon = firstPolygon, *rightPolygon = secondPolygon;
+                                if(leftPoint != firstPolygon->giveThePreviousPoint(point)) {
+                                    std::swap(leftPolygon, rightPolygon);
+                                }
+                                addPointToPolygon(leftPolygon, point, startEdge->bottom);
+                                addPointToPolygon(rightPolygon, point, endEdge->bottom);
+                                addToHash(leftPolygon, startEdge->bottom);
+                                addToHash(rightPolygon, endEdge->bottom);
+                            }
+                        }
+                        /// Создаем полигона, находящиеся между двумя добавленными ребрами
+                        while(edgeBegin != edgeEnd && point == edgeBegin->top) {
+                            createNewPolygon(point, leftPoint, edgeBegin->bottom);
+                            leftPoint = edgeBegin->bottom;
                         }
                     } else {
-                        if(leftBelow && rightBelow) {
-                            polygons.append(MonotonePolygon(point, leftPoint, leftEdge->bottom));
-                            polygons.append(MonotonePolygon(point, rightBelow, rightEdge->bottom));
-                        } else if(leftBelow) {
-                            auto polygonIter = polygons.begin();
-                            while(polygonIter != polygons.end()) {
-                                if(addPointToPolygon(*polygonIter, point, rightEdge->bottom)) {
-                                    break;
+                        /// Если нет добавленных ребер
+                        /// И это не последняя точка
+                        /// TODO доделать выбор стороны
+                        if(firstPolygon != nullptr) {
+                            if(secondPolygon != nullptr) {
+                                Vector2D p = dataPtr[point];
+                                {
+                                    Vector2D fp, sp;
+                                    if(firstPolygon->stack.top() == secondPolygon->stack.top()) {
+                                        fp = dataPtr[firstPolygon->stack.first()];
+                                        sp = dataPtr[secondPolygon->stack.first()];
+                                    } else {
+                                        fp = dataPtr[firstPolygon->stack.top()];
+                                        sp = dataPtr[secondPolygon->stack.top()];
+                                    }
+
+                                    float fx, sx;
+                                    if(fp.y == p.y || sp.y == p.y) { // Обработка исключительной ситуации
+                                        fx = fp.x;
+                                        sx = sp.x;
+                                    } else {
+                                        fx = (fp.x - p.x) / std::abs(fp.y - p.y);
+                                        sx = (sp.x - p.x) / std::abs(sp.y - p.y);
+                                    }
+
+                                    if(fx > sx) {
+                                        /// Делаем так, чтобы firstPolygon лежал левее
+                                        std::swap(firstPolygon, secondPolygon);
+                                    }
                                 }
-                                ++polygonIter;
-                            }
-                            polygons.append(MonotonePolygon(point, leftPoint, leftEdge->bottom));
-                        } else {
-                            auto polygonIter = polygons.begin();
-                            while(polygonIter != polygons.end()) {
-                                if(addPointToPolygon(*polygonIter, point, leftEdge->bottom)) {
-                                    break;
+
+                                float lx, rx;
+                                Vector2D lp = dataPtr[leftPoint];
+                                Vector2D rp = dataPtr[rightPoint];
+
+                                if(lp.y == p.y || rp.y == p.y) { // Обработка исключительного условия
+                                    lx = lp.x;
+                                    rx = rp.x;
+                                } else {
+                                    lx = (lp.x - p.x) / std::abs(lp.y - p.y);
+                                    rx = (rp.x - p.x) / std::abs(rp.y - p.y);
                                 }
-                                ++polygonIter;
+
+                                if(rx < lx) {
+                                    std::swap(leftPoint, rightPoint);
+                                }
+
+                                addPointToPolygon(firstPolygon, point, leftPoint);
+                                addToHash(firstPolygon, leftPoint);
+
+                                addPointToPolygon(secondPolygon, point, rightPoint);
+                                addToHash(secondPolygon, rightPoint);
+                            } else {
+                                if(leftPoint == firstPolygon->giveThePreviousPoint(point)) {
+                                    addPointToPolygon(firstPolygon, point, rightPoint);
+                                    addToHash(firstPolygon, rightPoint);
+                                } else {
+                                    addPointToPolygon(firstPolygon, point, leftPoint);
+                                    addToHash(firstPolygon, leftPoint);
+                                }
                             }
-                            polygons.append(MonotonePolygon(point, leftPoint, leftEdge->bottom));
-                        }
-                    }
-
-                    /// Добавляем новые полигоны
-                    while(leftEdge != rightEdge) {
-                        polygons.append(MonotonePolygon(point, leftEdge->bottom, (leftEdge + 1)->bottom));
-                        ++leftEdge;
-                    }
-
-                } else {
-                    auto polygonIter = polygons.begin();
-                    while(polygonIter != polygons.end()) {
-                        if()
-                    }
-
-                    if(leftBelow != rightBelow) { /// Промежуточная вершина
-                        /// Следующая точка должна быть обязательно не выше
-                        unsigned belowPoint = leftBelow ? leftPoint : rightPoint;
-                        auto polygonIter = polygons.begin();
-                        while(polygonIter != polygons.end()) {
-                            if(addPointToPolygon(*polygonIter, point, belowPoint))
-                                break;
-                            ++polygonIter;
-                        }
-                    } else if(leftBelow) {
-                        /// Если start
-                        /// Добавляем новый многоугольник
-                        polygons.append(MonotonePolygon(point, leftPoint, rightPoint));
-                    } else { /// Если end
-                        auto polygonIter = polygons.begin();
-                        /// End точка может принадлежать нескольким многоугольникам (точное число неизвестно)
-                        /// Поэтому проходим по всем изместным многоуольникам
-                        while(polygonIter != polygons.end()) {
-                            /// Для end точки polygonIter->nextPoint_1 == polygonIter->nextPoint_2
-                            if(polygonIter->nextPoint_1 == point) {
-                                /// значение next не имеет значения
-                                /// поскольку этот многоугольник мы удалим
-                                addPointToPolygon(*polygonIter, point, 0);
-                                // Удаляем многоугольник, поскольку мы больше не будем его обрабатывать
-                                polygonIter = polygons.erase(polygonIter);
-                            } else ++polygonIter;
                         }
                     }
                 }

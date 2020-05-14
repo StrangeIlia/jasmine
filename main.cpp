@@ -35,6 +35,7 @@ namespace bstu {
     Tree* test_ComplesSurface_1(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_2(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_3(Convertor = simpleConvertor);
+    Tree* test_ComplesSurface_4(Convertor = simpleConvertor);
 }
 
 using namespace bstu;
@@ -51,11 +52,12 @@ int main(int argc, char *argv[])
     //tree->restructure();
 
     Tree* tree =
-            //test_ComplesSurface_1();
-            test_ComplesSurface_2();
+            //test_ComplesSurface_1(); //Работает
+            //test_ComplesSurface_2(); //Работает
             //test_ComplesSurface_3(); // Работает
+            //test_ComplesSurface_4(); //Работает
             //create_box(); // Работает
-            //create_greenhouse(10); // Работает
+            create_greenhouse(10); // Работает
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -286,6 +288,31 @@ Tree* test_ComplesSurface_3(Convertor convertor) {
     vertexes[2].x = 3;   vertexes[2].y = 0;
     vertexes[3].x = 2;   vertexes[3].y = 3;
     vertexes[4].x = 0;   vertexes[4].y = 2;
+
+    for(int i = 0; i != vertexCount; ++i) {
+        vertexes[i].z = 0;
+        vertexes[i] = convertor(vertexes[i]);
+    }
+
+    int polygonsCount = 1;
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    polygons[0] = new VolumePolygon(vertexes, vertexCount);
+    Tree* tree = new Tree();
+    tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
+    return tree;
+}
+
+Tree* test_ComplesSurface_4(Convertor convertor) {
+    int vertexCount = 8;
+    Vertex* vertexes = new Vertex[vertexCount];
+    vertexes[0].x = 0;   vertexes[0].y = 0;
+    vertexes[1].x = 3;   vertexes[1].y = 0;
+    vertexes[2].x = 2;   vertexes[2].y = 1;
+    vertexes[3].x = 4;   vertexes[3].y = 2;
+    vertexes[4].x = 2;   vertexes[4].y = 3;
+    vertexes[5].x = 3;   vertexes[5].y = 4;
+    vertexes[6].x = 0;   vertexes[6].y = 4;
+    vertexes[7].x = 1;   vertexes[7].y = 2;
 
     for(int i = 0; i != vertexCount; ++i) {
         vertexes[i].z = 0;
