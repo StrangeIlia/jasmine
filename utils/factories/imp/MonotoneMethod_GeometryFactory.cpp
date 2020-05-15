@@ -188,7 +188,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
 
             auto clearEdges = [dataPtr, &edges] (unsigned p) {
                 auto min_y = dataPtr[p].y;
-                while(!edges.isEmpty() && dataPtr[edges.back().bottom].y > min_y) edges.removeLast();
+                while(!edges.isEmpty() && dataPtr[edges.back().bottom].y >= min_y) edges.removeLast();
             };
 
             auto isBelow = [dataPtr](unsigned below, unsigned upper) {
@@ -224,6 +224,8 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
 
                                 Vector2D top = dataPtr[iter->top];
                                 Vector2D bottom = dataPtr[iter->bottom];
+                                if(top.y == current.y) continue;
+
                                 float intersection = top.x + (bottom.x - top.x) / (bottom.y - top.y) * (current.y - top.y);
                                 if(intersection < current.x && intersection > left_x) {
                                     left_x = intersection;
@@ -247,6 +249,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                             for(; pointsIndexes[max] != minPoint; --max)
                             {
                                 Vector2D top, bottom, current = dataPtr[pointsIndexes[max]];
+                                if(current.y == dataPtr[point].y) continue;
                                 top = dataPtr[pointsIndexes[leftEdge.top]];
                                 bottom = dataPtr[pointsIndexes[leftEdge.bottom]];
                                 float intersection;
@@ -422,6 +425,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                         while(edgeBegin != edgeEnd && point == edgeBegin->top) {
                             createNewPolygon(point, leftPoint, edgeBegin->bottom);
                             leftPoint = edgeBegin->bottom;
+                            ++edgeBegin;
                         }
                     }
                     createNewPolygon(point, leftPoint, rightPoint);
@@ -521,8 +525,18 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
                                 {
                                     Vector2D fp, sp;
                                     if(firstPolygon->stack.top() == secondPolygon->stack.top()) {
-                                        fp = dataPtr[firstPolygon->stack.first()];
-                                        sp = dataPtr[secondPolygon->stack.first()];
+                                        if(firstPolygon->stack.first() == secondPolygon->stack.first()) {
+                                            if(firstPolygon->afterTheEnd == secondPolygon->afterTheEnd) {
+                                                fp = dataPtr[firstPolygon->beforeTheBeginning];
+                                                sp = dataPtr[secondPolygon->beforeTheBeginning];
+                                            } else {
+                                                fp = dataPtr[firstPolygon->afterTheEnd];
+                                                sp = dataPtr[secondPolygon->afterTheEnd];
+                                            }
+                                        } else {
+                                            fp = dataPtr[firstPolygon->stack.first()];
+                                            sp = dataPtr[secondPolygon->stack.first()];
+                                        }
                                     } else {
                                         fp = dataPtr[firstPolygon->stack.top()];
                                         sp = dataPtr[secondPolygon->stack.top()];

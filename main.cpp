@@ -30,12 +30,15 @@ namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
 
+    Tree* create_start(int n);
+
     typedef Vertex Convertor(Vertex);
     Vertex simpleConvertor(Vertex);
     Tree* test_ComplesSurface_1(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_2(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_3(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_4(Convertor = simpleConvertor);
+    Tree* test_ComplesSurface_5(Convertor = simpleConvertor);
 }
 
 using namespace bstu;
@@ -57,7 +60,9 @@ int main(int argc, char *argv[])
             //test_ComplesSurface_3(); // Работает
             //test_ComplesSurface_4(); //Работает
             //create_box(); // Работает
-            create_greenhouse(10); // Работает
+            //create_greenhouse(10); // Работает
+            test_ComplesSurface_5(); //Работает
+            //create_start(4); //Не работает
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -322,6 +327,101 @@ Tree* test_ComplesSurface_4(Convertor convertor) {
     int polygonsCount = 1;
     VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
     polygons[0] = new VolumePolygon(vertexes, vertexCount);
+    Tree* tree = new Tree();
+    tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
+    return tree;
+}
+
+Tree* test_ComplesSurface_5(Convertor convertor) {
+    int vertexCount = 8;
+    Vertex* vertexes = new Vertex[vertexCount];
+    vertexes[0].x = 3;    vertexes[0].y = 0;
+    vertexes[1].x = 1;    vertexes[1].y = 1;
+    vertexes[2].x = 0;    vertexes[2].y = 3;
+    vertexes[3].x = -1;   vertexes[3].y = 1;
+    vertexes[4].x = -3;   vertexes[4].y = 0;
+    vertexes[5].x = -1;   vertexes[5].y = -1;
+    vertexes[6].x = 0;    vertexes[6].y = -3;
+    vertexes[7].x = 1;    vertexes[7].y = -1;
+
+    for(int i = 0; i != vertexCount; ++i) {
+        vertexes[i].z = 0;
+        vertexes[i] = convertor(vertexes[i]);
+    }
+
+    int polygonsCount = 1;
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    polygons[0] = new VolumePolygon(vertexes, vertexCount);
+    Tree* tree = new Tree();
+    tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
+    return tree;
+}
+
+Tree* create_start(int n) {
+    if(n < 3) return nullptr;
+
+    int polygonsCount = (n + 1) * 2;
+    std::vector<Vertex*> arrayPolygonsVertex(polygonsCount);
+    arrayPolygonsVertex[0] = new Vertex[n * 2];
+    arrayPolygonsVertex[1] = new Vertex[n * 2];
+    for(int i = 2; i != polygonsCount; ++i) {
+        arrayPolygonsVertex[i] = new Vertex[4];
+    }
+
+    double da = 2 * M_PI / n;
+    double radius_outerCircle = 4, radius_innerCircle = sqrt(2);
+    double angle_outerCircle = 0, angle_innerCircle = da / 2;
+    double near_z = 1, distant_z = 3;
+
+    Vertex* nearStarVertexes = arrayPolygonsVertex[0];
+    Vertex* distantStarVertexes = arrayPolygonsVertex[1];
+    for(int i = 0; i != n; ++i) {
+        nearStarVertexes[i * 2].x = radius_outerCircle * sin(angle_outerCircle);
+        nearStarVertexes[i * 2].y = radius_outerCircle * cos(angle_outerCircle);
+        nearStarVertexes[i * 2].z = near_z;
+
+        nearStarVertexes[i * 2 + 1].x = radius_innerCircle * sin(angle_innerCircle);
+        nearStarVertexes[i * 2 + 1].y = radius_innerCircle * cos(angle_innerCircle);
+        nearStarVertexes[i * 2 + 1].z = near_z;
+
+        distantStarVertexes[i * 2].x = nearStarVertexes[i * 2].x;
+        distantStarVertexes[i * 2].y = nearStarVertexes[i * 2].y;
+        distantStarVertexes[i * 2].z = distant_z;
+
+        distantStarVertexes[i * 2 + 1].x = nearStarVertexes[i * 2 + 1].x;
+        distantStarVertexes[i * 2 + 1].y = nearStarVertexes[i * 2 + 1].y;
+        distantStarVertexes[i * 2 + 1].z = distant_z;
+
+        Vertex* connectingPolygon = arrayPolygonsVertex[2 + i * 2];
+        connectingPolygon[0] = nearStarVertexes[i * 2];
+        connectingPolygon[1] = nearStarVertexes[i * 2 + 1];
+        connectingPolygon[2] = distantStarVertexes[i * 2 + 1];
+        connectingPolygon[3] = distantStarVertexes[i * 2];
+
+        angle_outerCircle += da;
+        angle_innerCircle += da;
+    }
+
+    Vertex* lastConnectingPolygon = arrayPolygonsVertex.back();
+    lastConnectingPolygon[0] = distantStarVertexes[n * 2 - 1];
+    lastConnectingPolygon[1] = nearStarVertexes[n * 2 - 1];
+    lastConnectingPolygon[2] = nearStarVertexes[0];
+    lastConnectingPolygon[3] = distantStarVertexes[0];
+
+    for(int i = 0; i != n - 1; ++i) {
+        Vertex* connectingPolygon = arrayPolygonsVertex[3 + i * 2];
+        connectingPolygon[0] = distantStarVertexes[i * 2];
+        connectingPolygon[1] = nearStarVertexes[i * 2];
+        connectingPolygon[2] = nearStarVertexes[i * 2];
+        connectingPolygon[3] = distantStarVertexes[i * 2 + 1];
+    }
+
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    polygons[0] = new VolumePolygon(arrayPolygonsVertex[0], n * 2);
+    polygons[1] = new VolumePolygon(arrayPolygonsVertex[1], n * 2);
+    for(unsigned i = 2; i != arrayPolygonsVertex.size(); ++i)
+        polygons[i] = new VolumePolygon(arrayPolygonsVertex[i], 4);
+
     Tree* tree = new Tree();
     tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
     return tree;
