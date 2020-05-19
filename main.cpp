@@ -1,11 +1,4 @@
-//#include "mainwindow.h"
 #include <QApplication>
-//#include <stdio.h>
-//#include "EntityController.h"
-
-//#include <thread>
-
-//#include <cmath>
 
 #include "View3D.h"
 #include "EntitiesContainer.h"
@@ -49,11 +42,6 @@ int main(int argc, char *argv[])
 
     srand(GetCurrentTime());
 
-    //Tree* tree = create_box();
-
-    //Tree* tree = create_greenhouse(10);
-    //tree->restructure();
-
     Tree* tree =
             //test_ComplesSurface_1(); //Работает
             //test_ComplesSurface_2(); //Работает
@@ -81,7 +69,6 @@ int main(int argc, char *argv[])
     AbstractGeometryFactory* geometryFactory =
             //new SimpleGeometryFactory();
             new MonotoneMethod_GeometryFactory();
-            //new Contour_GeometryFactory();
     AbstractMaterialFactory* materialFactory = new SimpleMaterialFactory(view->rootEntity());
     AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
 
