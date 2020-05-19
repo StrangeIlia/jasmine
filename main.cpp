@@ -30,7 +30,7 @@ namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
 
-    Tree* create_start(int n);
+    Tree* create_star(int n);
 
     typedef Vertex Convertor(Vertex);
     Vertex simpleConvertor(Vertex);
@@ -56,13 +56,13 @@ int main(int argc, char *argv[])
 
     Tree* tree =
             //test_ComplesSurface_1(); //Работает
-            test_ComplesSurface_2(); //Работает
+            //test_ComplesSurface_2(); //Работает
             //test_ComplesSurface_3(); // Работает
             //test_ComplesSurface_4(); //Работает
             //test_ComplesSurface_5(); //Работает
             //create_box(); // Работает
             //create_greenhouse(10); // Работает
-            //create_start(4); //Не работает
+            create_star(4); //Не работает
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -357,7 +357,7 @@ Tree* test_ComplesSurface_5(Convertor convertor) {
     return tree;
 }
 
-Tree* create_start(int n) {
+Tree* create_star(int n) {
     if(n < 3) return nullptr;
 
     int polygonsCount =2;// (n + 1) * 2;
@@ -388,10 +388,11 @@ Tree* create_start(int n) {
         distantStarVertexes[i * 2].y = nearStarVertexes[i * 2].y;
         distantStarVertexes[i * 2].z = distant_z;
 
-        /*distantStarVertexes[i * 2 + 1].x = nearStarVertexes[i * 2 + 1].x;
+        distantStarVertexes[i * 2 + 1].x = nearStarVertexes[i * 2 + 1].x;
         distantStarVertexes[i * 2 + 1].y = nearStarVertexes[i * 2 + 1].y;
         distantStarVertexes[i * 2 + 1].z = distant_z;
 
+        /*
         Vertex* connectingPolygon = arrayPolygonsVertex[2 + i * 2];
         connectingPolygon[0] = nearStarVertexes[i * 2];
         connectingPolygon[1] = nearStarVertexes[i * 2 + 1];

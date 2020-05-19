@@ -9,7 +9,6 @@ QGeometryRenderer* SimpleGeometryFactory::create(Polyhedron* polyhedron) {
     QGeometryRenderer *renderer = new QGeometryRenderer();
     renderer->setGeometry(geometry);
     renderer->setPrimitiveType(QGeometryRenderer::Triangles);
-    //renderer->setPrimitiveType(QGeometryRenderer::Lines);
     return renderer;
 }
 
