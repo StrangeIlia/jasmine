@@ -4,7 +4,8 @@ namespace bstu {
 
 QGeometryRenderer* MonotoneMethod_GeometryFactory::create(Polyhedron* polyhedron) {
     QGeometry *geometry = new Qt3DRender::QGeometry();
-    SimpleGeometryFactory::createVertexAttribute(geometry, polyhedron);
+    //SimpleGeometryFactory::createVertexAttribute(geometry, polyhedron);
+    MonotoneMethod_GeometryFactory::createVertexAttribute(geometry, polyhedron);
     MonotoneMethod_GeometryFactory::createIndexesAttribute(geometry, polyhedron);
     QGeometryRenderer *renderer = new QGeometryRenderer();
     renderer->setGeometry(geometry);
@@ -25,6 +26,7 @@ struct Vector2D {
 struct Edge { unsigned top; unsigned bottom; };
 struct TriangleIndexes { unsigned short first, second, third; };
 
+bool clockWise(Plane plane);
 TriangleIndexes normalize(TriangleIndexes triangle);
 
 struct MonotonePolygon {
@@ -68,7 +70,6 @@ public:
     typedef std::function<void(TriangleIndexes)> Writer;
     void triangulate(Polygon* polygon, Writer writer);
 private:
-    static bool isClockWise(Plane plane);
     // Используется для создания проекции
     VectorSelector getSelector(Plane plane) const;
     // Разбиение на монотонные многоугольники
@@ -104,6 +105,91 @@ private:
     // Обработка точки, лежащей на дуге
     void arcProcessing(MonotonePolygon* polygon, unsigned point,  Writer writer);
 };
+
+void MonotoneMethod_GeometryFactory::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
+    /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
+    Qt3DRender::QAttribute *positionAttribute = new Qt3DRender::QAttribute(geometry);
+    /// Создаем атрибут отображения геометрии (нормали точек в пространстве)
+    Qt3DRender::QAttribute *normalAttribute = new Qt3DRender::QAttribute(geometry);
+    /// Добавляем в геометрию объекта наш атрибут
+    geometry->addAttribute(positionAttribute);
+    geometry->addAttribute(normalAttribute);
+
+    int countPoints = 0;
+    QByteArray bufferVertex;
+    int stride = sizeof(Vertex) * 2;
+    for(int i = 0; i < polyhedron->size(); ++i)
+    {
+        Polygon* polygon = polyhedron->polygon(i);
+        Plane plane = polygon->plane();
+        Vertex normal;
+        normal.x = plane.A;
+        normal.y = plane.B;
+        normal.z = plane.C;
+        int additionSize = polygon->size() * stride;
+        bufferVertex.reserve(bufferVertex.size() + additionSize);
+        countPoints += polygon->size();
+        if(clockWise(plane)/*polygon->isClockwise()*/)
+        {
+            for(unsigned j = 0; j < polygon->size(); ++j)
+            {
+                Vertex tmp = polygon->vertex(j);
+                bufferVertex.append((char*)&tmp, sizeof(Vertex));
+                bufferVertex.append((char*)&normal, sizeof(Vertex));
+            }
+        }
+        else
+        {
+            unsigned lastIndex = polygon->size() - 1;
+            for(unsigned j = 0; j < polygon->size(); ++j)
+            {
+                Vertex tmp = polygon->vertex(lastIndex - j);
+                bufferVertex.append((char*)&tmp, sizeof(Vertex));
+                bufferVertex.append((char*)&normal, sizeof(Vertex));
+            }
+        }
+    }
+
+    /// Создаем буфер, связанный с геометрией объекта
+    Qt3DRender::QBuffer *buf = new Qt3DRender::QBuffer(geometry);
+    /// Передаем в него точки
+    buf->setData(bufferVertex);
+
+    /// Указываем название атрибута (по умолчанию для позиций точек)
+    positionAttribute->setName(QAttribute::defaultPositionAttributeName());
+    /// Указываем, какой класс является базовым для Vertex
+    positionAttribute->setVertexBaseType(QAttribute::Float);
+    /// Указываем число измерений в Vertex
+    positionAttribute->setVertexSize(3);
+    /// Указываем, что атрибут отвечает за позиции точек в пространстве
+    positionAttribute->setAttributeType(QAttribute::VertexAttribute);
+    /// Передаем точки
+    positionAttribute->setBuffer(buf);
+    /// Указываем, какой интервал между точками
+    positionAttribute->setByteStride(stride);
+    /// Указываем сдвиг в байтах в буфере
+    normalAttribute->setByteOffset(0);
+    /// Указываем количество точек
+    positionAttribute->setCount(countPoints);
+
+    /// Указываем название атрибута (по умолчанию для нормалей точек)
+    normalAttribute->setName(QAttribute::defaultNormalAttributeName());
+    /// Указываем, какой класс является базовым для Vertex
+    normalAttribute->setVertexBaseType(QAttribute::Float);
+    /// Указываем число измерений в Vertex
+    normalAttribute->setVertexSize(3);
+    /// Указываем, что атрибут отвечает за позиции точек в пространстве
+    normalAttribute->setAttributeType(QAttribute::VertexAttribute);
+    /// Передаем точки
+    normalAttribute->setBuffer(buf);
+    /// Указываем, какой интервал между точками
+    normalAttribute->setByteStride(stride);
+    /// Указываем сдвиг в байтах в буфере
+    normalAttribute->setByteOffset(sizeof(Vertex));
+    /// Указываем количество точек
+    normalAttribute->setCount(countPoints);
+}
+
 
 void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
     int shift = 0;
@@ -154,7 +240,7 @@ void Triangulator::triangulate(Polygon* polygon, Writer writer) {
     points.reserve(polygon->size());
     indexesPoints.reserve(polygon->size());
     VectorSelector selector = getSelector(polygon->plane());
-    if(isClockWise(polygon->plane())/*polygon->isClockwise()*/) {
+    if(clockWise(polygon->plane()) /*polygon->isClockwise()*/) {
         for(unsigned i = 0; i != polygon->size(); ++i) {
             points.push_back(selector(polygon->vertex(i)));
             indexesPoints.push_back(i);
@@ -192,7 +278,7 @@ TriangleIndexes normalize(TriangleIndexes triangle) {
     return triangle;
 }
 
-bool Triangulator::isClockWise(Plane plane) {
+bool clockWise(Plane plane) {
     double x = std::abs(plane.A);
     double y = std::abs(plane.B);
     double z = std::abs(plane.C);
@@ -681,4 +767,5 @@ void Triangulator::triangulate(Writer writer) {
             }
         }
     }
+}
 }
