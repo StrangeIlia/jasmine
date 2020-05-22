@@ -442,6 +442,7 @@ void Triangulator::addEdge(unsigned top, unsigned bottom) {
         if(pair.first.value() == bottom) {
             return;
         }
+        ++pair.first;
     }
     addedEdges.insertMulti(top, bottom);
 }
