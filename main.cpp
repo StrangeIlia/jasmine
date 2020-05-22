@@ -44,13 +44,13 @@ int main(int argc, char *argv[])
 
     Tree* tree =
             //test_ComplesSurface_1(); //Работает
-            //test_ComplesSurface_2(); //Работает
+            //test_ComplesSurface_2(); //Работает (повернуть на 180 градусов)
             //test_ComplesSurface_3(); // Работает
-            //test_ComplesSurface_4(); //Работает
+            //test_ComplesSurface_4(); //Работает (повернуть на 180 градусов)
             //test_ComplesSurface_5(); //Работает
             //create_box(); // Работает
-            create_greenhouse(10); // Работает
-            //create_star(4); //Не работает
+            //create_greenhouse(10); // Работает
+            create_star(4); //Работает
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
@@ -347,7 +347,10 @@ Tree* test_ComplesSurface_5(Convertor convertor) {
 Tree* create_star(int n) {
     if(n < 3) return nullptr;
 
-    int polygonsCount =2;// (n + 1) * 2;
+    int polygonsCount =
+            //2
+            (n + 1) * 2;
+            //2 + n;
     std::vector<Vertex*> arrayPolygonsVertex(polygonsCount);
     arrayPolygonsVertex[0] = new Vertex[n * 2];
     arrayPolygonsVertex[1] = new Vertex[n * 2];
@@ -379,18 +382,18 @@ Tree* create_star(int n) {
         distantStarVertexes[i * 2 + 1].y = nearStarVertexes[i * 2 + 1].y;
         distantStarVertexes[i * 2 + 1].z = distant_z;
 
-        /*
+
         Vertex* connectingPolygon = arrayPolygonsVertex[2 + i * 2];
         connectingPolygon[0] = nearStarVertexes[i * 2];
         connectingPolygon[1] = nearStarVertexes[i * 2 + 1];
         connectingPolygon[2] = distantStarVertexes[i * 2 + 1];
         connectingPolygon[3] = distantStarVertexes[i * 2];
-        */
+
         angle_outerCircle += da;
         angle_innerCircle += da;
     }
 
-    /*Vertex* lastConnectingPolygon = arrayPolygonsVertex.back();
+    Vertex* lastConnectingPolygon = arrayPolygonsVertex.back();
     lastConnectingPolygon[0] = distantStarVertexes[n * 2 - 1];
     lastConnectingPolygon[1] = nearStarVertexes[n * 2 - 1];
     lastConnectingPolygon[2] = nearStarVertexes[0];
@@ -398,11 +401,11 @@ Tree* create_star(int n) {
 
     for(int i = 0; i != n - 1; ++i) {
         Vertex* connectingPolygon = arrayPolygonsVertex[3 + i * 2];
-        connectingPolygon[0] = distantStarVertexes[i * 2];
-        connectingPolygon[1] = nearStarVertexes[i * 2];
-        connectingPolygon[2] = nearStarVertexes[i * 2 + 1];
-        connectingPolygon[3] = distantStarVertexes[i * 2 + 1];
-    }*/
+        connectingPolygon[0] = distantStarVertexes[i * 2 + 1];
+        connectingPolygon[1] = nearStarVertexes[i * 2 + 1];
+        connectingPolygon[2] = nearStarVertexes[i * 2 + 2];
+        connectingPolygon[3] = distantStarVertexes[i * 2 + 2];
+    }
 
     VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
     polygons[0] = new VolumePolygon(arrayPolygonsVertex[0], n * 2);

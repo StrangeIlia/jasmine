@@ -16,7 +16,6 @@ public:
 protected:
      void init() override;
 private:
-    View3D* _view = nullptr;
     Qt3DCore::QTransform* _transform = nullptr;
     MyOrbitCameraController* _controller = nullptr;
     Qt3DCore::QEntity *_lightEntity = nullptr;

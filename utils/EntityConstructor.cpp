@@ -21,7 +21,8 @@ void EntityConstructor::createEntity(EntityPair pair) {
     Polyhedron* polyhedron = pair.key->data();
     QEntity* entity = new QEntity();
     Qt3DCore::QTransform* transform = this->transform->create(polyhedron);
-    set->append(transform);
+    if(set != nullptr)
+        set->append(transform);
     entity->addComponent(transform);
     entity->addComponent(geometry->create(polyhedron));
     entity->addComponent(material->create(polyhedron));
