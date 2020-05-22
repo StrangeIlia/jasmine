@@ -437,6 +437,12 @@ unsigned Triangulator::findBottomPoint(PointIterator iterator, Edge left, Edge r
 }
 
 void Triangulator::addEdge(unsigned top, unsigned bottom) {
+    auto pair = addedEdges.equal_range(top);
+    while(pair.first != pair.second) {
+        if(pair.first.value() == bottom) {
+            return;
+        }
+    }
     addedEdges.insertMulti(top, bottom);
 }
 

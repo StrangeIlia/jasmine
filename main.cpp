@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
             //test_ComplesSurface_4(); //Работает (повернуть на 180 градусов)
             //test_ComplesSurface_5(); //Работает
             //create_box(); // Работает
-            //create_greenhouse(10); // Работает
-            create_star(4); //Работает
+            create_greenhouse(10); // Работает
+            //create_star(4); //Работает
 
     /// View с отображаемыми фигурами
     View3D* view = new bstu::View3D();
