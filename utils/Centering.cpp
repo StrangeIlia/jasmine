@@ -4,19 +4,16 @@ namespace bstu{
 Centering::Centering(AbstractEntityMap* map, AbstractEnumerable<Qt3DCore::QTransform*>* _set) : QObject(map), set(_set)
 {
     this->map = map;
-    connect(map, SIGNAL(appended(EntityPair)), SLOT(appended(EntityPair)));
-    connect(map, SIGNAL(changed(EntityPair, QEntity*)), SLOT(changed(EntityPair, QEntity*)));
-    connect(map, SIGNAL(removed(EntityPair)), SLOT(removed(EntityPair)));
+    connect(map, SIGNAL(appended(EntityPair)), this, SLOT(appended(EntityPair)));
+    connect(map, SIGNAL(changed(EntityPair, QEntity*)), this, SLOT(changed(EntityPair, QEntity*)));
+    connect(map, SIGNAL(removed(EntityPair)), this, SLOT(removed(EntityPair)));
 }
 
 void Centering::appended(EntityPair pair) {
     if(pair.key == nullptr) return;
     if(pair.value == nullptr) return;
-    Vector oldCenter;
     if(map->count() == 1) {
         initVectors();
-    } else {
-        oldCenter = (minVector + maxVector) / 2;
     }
     bool changePosition = false;
     Polyhedron* polyhedron = pair.key->data();
@@ -43,7 +40,7 @@ void Centering::appended(EntityPair pair) {
     }
     if(changePosition) {
         Vector newCenter = (minVector + maxVector) / 2;
-        changePositions(minus(oldCenter, newCenter));
+        changePositions(minus(Vector(), newCenter));
     }
 }
 
@@ -62,13 +59,12 @@ void Centering::removed(EntityPair pair) {
     if(map->count() == 0) return;
     Polyhedron* polyhedron = pair.key->data();
     if(!minPol.has(polyhedron) && !maxPol.has(polyhedron)) return;
-    Vector oldCenter = (minVector + maxVector) / 2;
-    if(minPol.x == polyhedron) minVector.x = std::numeric_limits<double>::max();
-    if(minPol.y == polyhedron) minVector.y = std::numeric_limits<double>::max();
-    if(minPol.z == polyhedron) minVector.z = std::numeric_limits<double>::max();
-    if(maxPol.x == polyhedron) maxVector.x = std::numeric_limits<double>::min();
-    if(maxPol.y == polyhedron) maxVector.y = std::numeric_limits<double>::min();
-    if(maxPol.z == polyhedron) maxVector.z = std::numeric_limits<double>::min();
+    if(minPol.x == polyhedron) minVector.x =  std::numeric_limits<double>::max();
+    if(minPol.y == polyhedron) minVector.y =  std::numeric_limits<double>::max();
+    if(minPol.z == polyhedron) minVector.z =  std::numeric_limits<double>::max();
+    if(maxPol.x == polyhedron) maxVector.x = -std::numeric_limits<double>::max();
+    if(maxPol.y == polyhedron) maxVector.y = -std::numeric_limits<double>::max();
+    if(maxPol.z == polyhedron) maxVector.z = -std::numeric_limits<double>::max();
     Enumerator<EntityPair> enumerator = map->getEnumerator();
     while(enumerator->moveNext()) {
         polyhedron = enumerator->current().key->data();
@@ -93,12 +89,12 @@ void Centering::removed(EntityPair pair) {
         }
     }
     Vector newCenter = (minVector + maxVector) / 2;
-    changePositions(minus(oldCenter, newCenter));
+    changePositions(minus(Vector(), newCenter));
 }
 
 void Centering::initVectors() {
-    minVector.x = minVector.y = minVector.z = std::numeric_limits<double>::max();
-    maxVector.x = maxVector.y = maxVector.z = std::numeric_limits<double>::min();
+    minVector.x = minVector.y = minVector.z =  std::numeric_limits<double>::max();
+    maxVector.x = maxVector.y = maxVector.z = -std::numeric_limits<double>::max();
     minPol.x = minPol.y = minPol.z = nullptr;
     maxPol.x = maxPol.y = maxPol.z = nullptr;
 }

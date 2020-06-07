@@ -8,11 +8,11 @@ class Cleaner : public QObject {
     Q_OBJECT
 public:
     Cleaner(AbstractEntityMap* map) : QObject(map) {
-        connect(map, SIGNAL(removed(PolyhedronExtension*, QEntity*)), SLOT(removeEmtity(PolyhedronExtension*, QEntity*)));
+        connect(map, SIGNAL(removed(EntityPair)), this, SLOT(removeEmtity(EntityPair)));
     }
 private slots:
-    void removeEmtity(PolyhedronExtension*, QEntity* entity) {
-        entity->deleteLater();
+    void removeEmtity(EntityPair pair) {
+        pair.value->deleteLater();
     }
 };
 }

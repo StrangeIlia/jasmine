@@ -4,10 +4,10 @@ namespace bstu {
 SelectorInitializer::SelectorInitializer(View3D *view) : AbstractViewInitializer(view)
 {
     QEntity* fictitious = new QEntity(view->rootEntity());
-    QPhongAlphaMaterial* selectedMaterial = new QPhongAlphaMaterial(fictitious);
+    QPhongMaterial* selectedMaterial = new QPhongMaterial(fictitious);
     selectedMaterial->setShareable(true);
     selectedMaterial->setShininess(0.8f);
-    selectedMaterial->setAlpha(1.0f);
+    //selectedMaterial->setAlpha(1.0f);
     selectedMaterial->setDiffuse(Qt::red);
     this->selectedMaterial = selectedMaterial;
     fictitious->addComponent(selectedMaterial);

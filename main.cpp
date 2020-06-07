@@ -17,6 +17,7 @@
 #include "utils/Adapter.h"
 #include "utils/Activator.h"
 #include "utils/Centering.hpp"
+#include "utils/Cleaner.hpp"
 #include "utils/EntityConstructor.h"
 
 namespace bstu {
@@ -83,6 +84,8 @@ int main(int argc, char *argv[])
     new Activator(mainContainer);
     /// Отвечает за центровку фигур
     new Centering(mainContainer, transformsSet);
+    /// Отвечает за удаление ненужных сущностей
+    new Cleaner(mainContainer);
 
     tree_view->show();
     QWidget* widget = QWidget::createWindowContainer(view);
