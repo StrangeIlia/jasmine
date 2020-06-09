@@ -1,15 +1,28 @@
 #include "MonotoneMethod_GeometryFactory.h"
 
+#if DEBUG
+    #include <iostream>
+    #include <chrono>
+#endif
+
 namespace bstu {
 
 QGeometryRenderer* MonotoneMethod_GeometryFactory::create(Polyhedron* polyhedron) {
     QGeometry *geometry = new Qt3DRender::QGeometry();
     //SimpleGeometryFactory::createVertexAttribute(geometry, polyhedron);
+#if DEBUG
+    auto start = std::chrono::system_clock::now();
+#endif
     MonotoneMethod_GeometryFactory::createVertexAttribute(geometry, polyhedron);
     MonotoneMethod_GeometryFactory::createIndexesAttribute(geometry, polyhedron);
     QGeometryRenderer *renderer = new QGeometryRenderer();
     renderer->setGeometry(geometry);
     renderer->setPrimitiveType(QGeometryRenderer::Triangles);
+#if DEBUG
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> time = end - start;
+    std::cout << "triangulation took " << time.count() << " sec" << std::endl;
+#endif
     return renderer;
 }
 

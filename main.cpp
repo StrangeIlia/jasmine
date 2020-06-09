@@ -20,6 +20,10 @@
 #include "utils/Cleaner.hpp"
 #include "utils/EntityConstructor.h"
 
+#include <random>
+
+#include <iostream>
+
 namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
@@ -33,6 +37,8 @@ namespace bstu {
     Tree* test_ComplesSurface_3(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_4(Convertor = simpleConvertor);
     Tree* test_ComplesSurface_5(Convertor = simpleConvertor);
+    
+    void test_Speed_Polygons(EntitiesContainer* container,  unsigned countPoints, unsigned polygonCount = 1);
 }
 
 using namespace bstu;
@@ -68,8 +74,8 @@ int main(int argc, char *argv[])
     new SelectorInitializer(view);
 
     AbstractGeometryFactory* geometryFactory =
-            //new SimpleGeometryFactory();
-            new MonotoneMethod_GeometryFactory();
+            new SimpleGeometryFactory();
+            //new MonotoneMethod_GeometryFactory();
     AbstractMaterialFactory* materialFactory = new SimpleMaterialFactory(view->rootEntity());
     AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
 
@@ -86,6 +92,85 @@ int main(int argc, char *argv[])
     new Centering(mainContainer, transformsSet);
     /// Отвечает за удаление ненужных сущностей
     new Cleaner(mainContainer);
+
+
+//    test_Speed_Polygons(mainContainer, 100);
+//    test_Speed_Polygons(mainContainer, 100);
+//    test_Speed_Polygons(mainContainer, 100);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 200);
+//    test_Speed_Polygons(mainContainer, 200);
+//    test_Speed_Polygons(mainContainer, 200);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 500);
+//    test_Speed_Polygons(mainContainer, 500);
+//    test_Speed_Polygons(mainContainer, 500);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 1000);
+//    test_Speed_Polygons(mainContainer, 1000);
+//    test_Speed_Polygons(mainContainer, 1000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 2000);
+//    test_Speed_Polygons(mainContainer, 2000);
+//    test_Speed_Polygons(mainContainer, 2000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 5000);
+//    test_Speed_Polygons(mainContainer, 5000);
+//    test_Speed_Polygons(mainContainer, 5000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 10000);
+//    test_Speed_Polygons(mainContainer, 10000);
+//    test_Speed_Polygons(mainContainer, 10000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 20000);
+//    test_Speed_Polygons(mainContainer, 20000);
+//    test_Speed_Polygons(mainContainer, 20000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 50000);
+//    test_Speed_Polygons(mainContainer, 50000);
+//    test_Speed_Polygons(mainContainer, 50000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 100000);
+//    test_Speed_Polygons(mainContainer, 100000);
+//    test_Speed_Polygons(mainContainer, 100000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 200000);
+//    test_Speed_Polygons(mainContainer, 200000);
+//    test_Speed_Polygons(mainContainer, 200000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 500000);
+//    test_Speed_Polygons(mainContainer, 500000);
+//    test_Speed_Polygons(mainContainer, 500000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 1000000);
+//    test_Speed_Polygons(mainContainer, 1000000);
+//    test_Speed_Polygons(mainContainer, 1000000);
+//    std::cout << "-----------------------------" << std::endl;
+
+//    test_Speed_Polygons(mainContainer, 30, 100);
+//    test_Speed_Polygons(mainContainer, 30, 100);
+//    test_Speed_Polygons(mainContainer, 30, 100);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 30, 200);
+//    test_Speed_Polygons(mainContainer, 30, 200);
+//    test_Speed_Polygons(mainContainer, 30, 200);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 30, 500);
+//    test_Speed_Polygons(mainContainer, 30, 500);
+//    test_Speed_Polygons(mainContainer, 30, 500);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 30, 1000);
+//    test_Speed_Polygons(mainContainer, 30, 1000);
+//    test_Speed_Polygons(mainContainer, 30, 1000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 30, 2000);
+//    test_Speed_Polygons(mainContainer, 30, 2000);
+//    test_Speed_Polygons(mainContainer, 30, 2000);
+//    std::cout << "-----------------------------" << std::endl;
+//    test_Speed_Polygons(mainContainer, 30, 5000);
+//    test_Speed_Polygons(mainContainer, 30, 5000);
+//    test_Speed_Polygons(mainContainer, 30, 5000);
+//    std::cout << "-----------------------------" << std::endl;
 
     tree_view->show();
     QWidget* widget = QWidget::createWindowContainer(view);
@@ -421,4 +506,27 @@ Tree* create_star(int n) {
     return tree;
 }
 
+double my_rand() {
+    static int max = 0x3FFFFFFF;
+    int v = rand() << 15 | rand();
+    return double(v) / max;
+}
+
+void test_Speed_Polygons(EntitiesContainer* container,  unsigned countPoints, unsigned polygonsCount) {
+    VolumePolygon** polygons = new VolumePolygon*[polygonsCount];
+    for(unsigned i = 0; i != polygonsCount; ++i) {
+        Vertex* polygonVertex = new Vertex[countPoints];
+        for(unsigned j = 0; j != countPoints; ++j) {
+            polygonVertex[j].x = my_rand() * 100;
+            polygonVertex[j].y = my_rand() * 100;
+        }
+        polygons[i] = new VolumePolygon(polygonVertex, countPoints);
+    }
+    PolyhedronExtension* ext =
+            new PolyhedronExtension(new Polyhedron(polygons, polygonsCount));
+    AbstractPolyhedronSet* set = container;
+    set->append(ext);
+    set->remove(ext);
+    delete ext;
+}
 }

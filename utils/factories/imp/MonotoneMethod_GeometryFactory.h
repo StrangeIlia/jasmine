@@ -6,6 +6,8 @@
 
 #include <QLinkedList>
 
+#define DEBUG 1
+
 namespace bstu {
 /// Используется алгоритм Делоне с динамическим кешированием и предварительным вычислением радиуса
 class MonotoneMethod_GeometryFactory : public AbstractGeometryFactory

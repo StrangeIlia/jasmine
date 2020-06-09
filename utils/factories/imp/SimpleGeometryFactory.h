@@ -3,6 +3,8 @@
 
 #include "utils/factories/AbstractGeometryFactory.hpp"
 
+#define DEBUG 1
+
 namespace bstu {
 class SimpleGeometryFactory : public AbstractGeometryFactory
 {
