@@ -1,28 +1,15 @@
 #include "SimpleGeometryFactory.h"
 
-#if DEBUG
-    #include <iostream>
-    #include <chrono>
-#endif
-
-
+л
 namespace bstu {
 
 QGeometryRenderer* SimpleGeometryFactory::create(Polyhedron* polyhedron) {
     QGeometry *geometry = new Qt3DRender::QGeometry();
-#if DEBUG
-    auto start = std::chrono::system_clock::now();
-#endif
     createVertexAttribute(geometry, polyhedron);
     createIndexesAttribute(geometry, polyhedron);
     QGeometryRenderer *renderer = new QGeometryRenderer();
     renderer->setGeometry(geometry);
     renderer->setPrimitiveType(QGeometryRenderer::Triangles);
-#if DEBUG
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> time = end - start;
-    std::cout << "triangulation took " << time.count() << " sec" << std::endl;
-#endif
     return renderer;
 }
 
