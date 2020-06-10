@@ -48,6 +48,7 @@ void PolyhedronTreeView::clearTree() {
         QStandardItem *item = model->item(i);
         if(item != nullptr && item->data().data() != nullptr) {
             PolyhedronExtension* polyhedron = qvariant_cast<PolyhedronExtension*>(item->data());
+            if(polyhedron == nullptr) return;
             delete polyhedron;
         }
     }
@@ -100,7 +101,20 @@ void PolyhedronTreeView::fillProcessing(const QModelIndex& index)
         Polygon* polygon = polyhedron->polygon(j);
         item->setChild(j + shift, 0, new QStandardItem(QString("Грань %0").arg(j + 1)));
         item->setChild(j + shift, 1, new QStandardItem(QString("%0").arg(polygon->mes())));
-        item->setChild(j + shift, 2, new QStandardItem("(x1, y1, z1), (z2, y2, z2), (x3, y3, z3)"));
+        unsigned count = polygon->size() - 1;
+        QString coordinate = "";
+        for(unsigned k = 0; k != count; ++k) {
+            Vertex ver = polygon->vertex(k);
+            coordinate += "(" + QString::number(ver.x);
+            coordinate +=  ", " + QString::number(ver.y);
+            coordinate +=  ", " + QString::number(ver.z) + "), ";
+        }
+        Vertex ver = polygon->vertex(count);
+        coordinate += "(" + QString::number(ver.x);
+        coordinate +=  ", " + QString::number(ver.y);
+        coordinate +=  ", " + QString::number(ver.z) + ")";
+        item->setChild(j + shift, 2, new QStandardItem(coordinate));
+        //item->setChild(j + shift, 2, new QStandardItem("(x1, y1, z1), (z2, y2, z2), (x3, y3, z3)"));
     }
 }
 

@@ -32,12 +32,17 @@ namespace bstu {
 
     typedef Vertex Convertor(Vertex);
     Vertex simpleConvertor(Vertex);
-    Tree* test_ComplesSurface_1(Convertor = simpleConvertor);
-    Tree* test_ComplesSurface_2(Convertor = simpleConvertor);
-    Tree* test_ComplesSurface_3(Convertor = simpleConvertor);
-    Tree* test_ComplesSurface_4(Convertor = simpleConvertor);
-    Tree* test_ComplesSurface_5(Convertor = simpleConvertor);
+    Tree* test_ComplexSurface_1(Convertor = simpleConvertor);
+    Tree* test_ComplexSurface_2(Convertor = simpleConvertor);
+    Tree* test_ComplexSurface_3(Convertor = simpleConvertor);
+    Tree* test_ComplexSurface_4(Convertor = simpleConvertor);
+    Tree* test_ComplexSurface_5(Convertor = simpleConvertor);
 }
+
+/// TODO
+/// Ошибка в нормалях, скорее всего вызвана разрезом плоскости
+/// Наглядный вариант - второй многогранника теплица
+
 
 using namespace bstu;
 int main(int argc, char *argv[])
@@ -48,11 +53,11 @@ int main(int argc, char *argv[])
     srand(GetCurrentTime());
 
     Tree* tree =
-            //test_ComplesSurface_1(); //Работает
-            //test_ComplesSurface_2(); //Работает (повернуть на 180 градусов)
-            //test_ComplesSurface_3(); // Работает
-            //test_ComplesSurface_4(); //Работает (повернуть на 180 градусов)
-            //test_ComplesSurface_5(); //Работает
+            //test_ComplexSurface_1(); //Работает
+            //test_ComplexSurface_2(); //Работает (повернуть на 180 градусов)
+            //test_ComplexSurface_3(); // Работает
+            //test_ComplexSurface_4(); //Работает (повернуть на 180 градусов)
+            //test_ComplexSurface_5(); //Работает
             //create_box(); // Работает
             create_greenhouse(10); // Работает
             //create_star(4); //Работает
@@ -222,7 +227,7 @@ Vertex simpleConvertor(Vertex sourse) {
     return sourse;
 }
 
-Tree* test_ComplesSurface_1(Convertor convertor) {
+Tree* test_ComplexSurface_1(Convertor convertor) {
     int vertexCount = 15;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 15;   vertexes[0].y = 8;
@@ -254,7 +259,7 @@ Tree* test_ComplesSurface_1(Convertor convertor) {
     return tree;
 }
 
-Tree* test_ComplesSurface_2(Convertor convertor) {
+Tree* test_ComplexSurface_2(Convertor convertor) {
     int vertexCount = 8;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 0;   vertexes[0].y = 4;
@@ -279,7 +284,7 @@ Tree* test_ComplesSurface_2(Convertor convertor) {
     return tree;
 }
 
-Tree* test_ComplesSurface_3(Convertor convertor) {
+Tree* test_ComplexSurface_3(Convertor convertor) {
     int vertexCount = 5;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 0;   vertexes[0].y = 7;
@@ -301,7 +306,7 @@ Tree* test_ComplesSurface_3(Convertor convertor) {
     return tree;
 }
 
-Tree* test_ComplesSurface_4(Convertor convertor) {
+Tree* test_ComplexSurface_4(Convertor convertor) {
     int vertexCount = 8;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 0;   vertexes[0].y = 0;
@@ -326,7 +331,7 @@ Tree* test_ComplesSurface_4(Convertor convertor) {
     return tree;
 }
 
-Tree* test_ComplesSurface_5(Convertor convertor) {
+Tree* test_ComplexSurface_5(Convertor convertor) {
     int vertexCount = 8;
     Vertex* vertexes = new Vertex[vertexCount];
     vertexes[0].x = 3;    vertexes[0].y = 0;

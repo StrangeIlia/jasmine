@@ -4,7 +4,6 @@ namespace bstu {
 
 QGeometryRenderer* MonotoneMethod_GeometryFactory::create(Polyhedron* polyhedron) {
     QGeometry *geometry = new Qt3DRender::QGeometry();
-    //SimpleGeometryFactory::createVertexAttribute(geometry, polyhedron);
     MonotoneMethod_GeometryFactory::createVertexAttribute(geometry, polyhedron);
     MonotoneMethod_GeometryFactory::createIndexesAttribute(geometry, polyhedron);
     QGeometryRenderer *renderer = new QGeometryRenderer();
@@ -24,7 +23,7 @@ struct Vector2D {
 };
 
 struct Edge { unsigned top; unsigned bottom; };
-struct TriangleIndexes { unsigned short first, second, third; };
+struct TriangleIndexes { unsigned first, second, third; };
 
 bool clockWise(Plane plane);
 TriangleIndexes normalize(TriangleIndexes triangle);
@@ -106,6 +105,13 @@ private:
     void arcProcessing(MonotonePolygon* polygon, unsigned point,  Writer writer);
 };
 
+class TEST_POLYGON : public Polygon{
+public:
+    std::vector<Vertex>& vertexes() {
+        return V;
+    }
+};
+
 void MonotoneMethod_GeometryFactory::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
     /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
     Qt3DRender::QAttribute *positionAttribute = new Qt3DRender::QAttribute(geometry);
@@ -129,7 +135,7 @@ void MonotoneMethod_GeometryFactory::createVertexAttribute(QGeometry* geometry, 
         int additionSize = polygon->size() * stride;
         bufferVertex.reserve(bufferVertex.size() + additionSize);
         countPoints += polygon->size();
-        if(clockWise(plane)/*polygon->isClockwise()*/)
+        if(polygon->isClockwise())
         {
             for(unsigned j = 0; j < polygon->size(); ++j)
             {
@@ -202,7 +208,7 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
         triangle.first += shift;
         triangle.second += shift;
         triangle.third += shift;
-        bufferIndexes.append((char*)&triangle, sizeof(unsigned short) * 3);
+        bufferIndexes.append((char*)&triangle, sizeof(unsigned) * 3);
     };
 
     for(int i = 0; i < polyhedron->size(); ++i)
@@ -223,13 +229,13 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
     /// Создаем атрибут отображения геометрии (номера точек)
     QAttribute *indexAttribute = new QAttribute(geometry);
     /// Указываем, какой класс является базовым для номеров
-    indexAttribute->setVertexBaseType(QAttribute::UnsignedShort);
+    indexAttribute->setVertexBaseType(QAttribute::UnsignedInt);
     /// Указываем, что атрибут отвечает за номера точек
     indexAttribute->setAttributeType(QAttribute::IndexAttribute);
     /// Передаем точки
     indexAttribute->setBuffer(indexesBuf);
     /// Указываем число точек
-    indexAttribute->setCount(bufferIndexes.size() / sizeof(unsigned short));
+    indexAttribute->setCount(bufferIndexes.size() / sizeof(unsigned));
     /// Добавляем в геометрию объекта наш атрибут
     geometry->addAttribute(indexAttribute);
 }
@@ -239,18 +245,15 @@ void Triangulator::triangulate(Polygon* polygon, Writer writer) {
     indexesPoints.clear();
     points.reserve(polygon->size());
     indexesPoints.reserve(polygon->size());
-    VectorSelector selector = getSelector(polygon->plane());
-    if(clockWise(polygon->plane()) /*polygon->isClockwise()*/) {
-        for(unsigned i = 0; i != polygon->size(); ++i) {
-            points.push_back(selector(polygon->vertex(i)));
-            indexesPoints.push_back(i);
-        }
-    } else {
-        unsigned lastIndex = polygon->size() - 1;
-        for(unsigned i = 0; i != polygon->size(); ++i) {
-            points.push_back(selector(polygon->vertex(lastIndex - i)));
-            indexesPoints.push_back(i);
-        }
+    Plane plane = polygon->plane();
+    if(!polygon->isClockwise()) {
+        plane.turn_back();
+    }
+
+    VectorSelector selector = getSelector(plane);
+    for(unsigned i = 0; i != polygon->size(); ++i) {
+        points.push_back(selector(polygon->vertex(i)));
+        indexesPoints.push_back(i);
     }
 
     auto comparator = [dataPtr = points.data()] (unsigned top, unsigned bottom) -> bool {

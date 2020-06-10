@@ -1,6 +1,5 @@
 #include "SimpleGeometryFactory.h"
 
-л
 namespace bstu {
 
 QGeometryRenderer* SimpleGeometryFactory::create(Polyhedron* polyhedron) {
@@ -29,6 +28,7 @@ void SimpleGeometryFactory::createVertexAttribute(QGeometry* geometry, Polyhedro
     {
         Polygon* polygon = polyhedron->polygon(i);
         Plane plane = polygon->plane();
+
         Vertex normal;
         normal.x = plane.A;
         normal.y = plane.B;
