@@ -105,13 +105,6 @@ private:
     void arcProcessing(MonotonePolygon* polygon, unsigned point,  Writer writer);
 };
 
-class TEST_POLYGON : public Polygon{
-public:
-    std::vector<Vertex>& vertexes() {
-        return V;
-    }
-};
-
 void MonotoneMethod_GeometryFactory::createVertexAttribute(QGeometry* geometry, Polyhedron* polyhedron) {
     /// Создаем атрибут отображения геометрии (позиции точек в пространстве)
     Qt3DRender::QAttribute *positionAttribute = new Qt3DRender::QAttribute(geometry);
@@ -127,6 +120,7 @@ void MonotoneMethod_GeometryFactory::createVertexAttribute(QGeometry* geometry, 
     for(int i = 0; i < polyhedron->size(); ++i)
     {
         Polygon* polygon = polyhedron->polygon(i);
+
         Plane plane = polygon->plane();
         Vertex normal;
         normal.x = plane.A;
@@ -135,7 +129,21 @@ void MonotoneMethod_GeometryFactory::createVertexAttribute(QGeometry* geometry, 
         int additionSize = polygon->size() * stride;
         bufferVertex.reserve(bufferVertex.size() + additionSize);
         countPoints += polygon->size();
-        if(polygon->isClockwise())
+
+        class TEST_Polygon : public Polygon {
+        public:
+            std::vector<Vertex> vertexes() {
+                return V;
+            }
+        };
+
+        TEST_Polygon* test = (TEST_Polygon*)polygon;
+        Plane planePolygon(test->vertexes().data(), test->vertexes().size());
+
+        double cos_ = plane.A * planePolygon.A + plane.B * planePolygon.B + plane.C * planePolygon.C;
+
+        if(cos_ >= 0) //polygon->isClockwise()
+        //if(polygon->isClockwise())
         {
             for(unsigned j = 0; j < polygon->size(); ++j)
             {
@@ -240,15 +248,27 @@ void MonotoneMethod_GeometryFactory::createIndexesAttribute(QGeometry* geometry,
     geometry->addAttribute(indexAttribute);
 }
 
+class TEST_POLYGON : public Polygon{
+public:
+    Plane& setPlane() {
+        return _plane;
+    }
+    std::vector<Vertex>& vertexes() {
+        return V;
+    }
+};
+
 void Triangulator::triangulate(Polygon* polygon, Writer writer) {
     points.clear();
     indexesPoints.clear();
     points.reserve(polygon->size());
     indexesPoints.reserve(polygon->size());
-    Plane plane = polygon->plane();
-    if(!polygon->isClockwise()) {
-        plane.turn_back();
-    }
+//    Plane plane = polygon->plane(); // Не надежный вариант
+//    if(!polygon->isClockwise()) {
+//        plane.turn_back();
+//    }
+    TEST_POLYGON* testPolygon = (TEST_POLYGON*) polygon;
+    Plane plane(testPolygon->vertexes().data(), testPolygon->vertexes().size());
 
     VectorSelector selector = getSelector(plane);
     for(unsigned i = 0; i != polygon->size(); ++i) {

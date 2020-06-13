@@ -18,16 +18,26 @@ class SelectorInitializer : public AbstractViewInitializer
 {
     Q_OBJECT
 public:
-    explicit SelectorInitializer(View3D *view);
+    class Action {
+    public:
+        virtual ~Action();
+        virtual void entitySelected(QEntity* entity) = 0;
+        virtual void entityUnselected(QEntity* entity) = 0;
+    };
+
+    /// За освобождение памяти Action* отвечает селектор
+    explicit SelectorInitializer(View3D *view, std::vector<Action*> list);
+    ~SelectorInitializer();
+
 private slots:
     void select(Qt3DRender::QPickEvent* );
+    void unselectDelete(QObject* );
+    void unselectDisable(bool );
 private:
     void init() override;
 
-    QMaterial* oldMaterial;
     QEntity* selectedEntity = nullptr;
-
-    QMaterial* selectedMaterial;
+    std::vector<Action*> list;
 };
 }
 

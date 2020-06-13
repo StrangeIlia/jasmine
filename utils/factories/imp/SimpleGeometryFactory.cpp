@@ -24,19 +24,34 @@ void SimpleGeometryFactory::createVertexAttribute(QGeometry* geometry, Polyhedro
     int countPoints = 0;
     QByteArray bufferVertex;
     int stride = sizeof(Vertex) * 2;
+
     for(int i = 0; i < polyhedron->size(); ++i)
     {
         Polygon* polygon = polyhedron->polygon(i);
         Plane plane = polygon->plane();
 
-        Vertex normal;
-        normal.x = plane.A;
-        normal.y = plane.B;
-        normal.z = plane.C;
         int additionSize = polygon->size() * stride;
         bufferVertex.reserve(bufferVertex.size() + additionSize);
         countPoints += polygon->size();
-        if(polygon->isClockwise())
+
+        // Если вектор нормали повёрнут неправильно, то разворачиваем его
+        if (plane.distanceTo(polyhedron->center()) > 0)
+        {
+           plane.turn_back();
+        }
+
+        Vertex normal(plane.A, plane.B, plane.C);
+
+        // Адрес массива вершин
+        std::vector<Vertex>* vertices = (std::vector<Vertex>*)polygon;
+
+        Plane plane_real(vertices->data(),vertices->size());
+
+        Vector N1(plane.A, plane.B, plane.C);
+
+        Vector N2(plane_real.A, plane_real.B, plane_real.C);
+
+        if(N1 * N2 > 0)
         {
             for(int j = 0; j < polygon->size(); ++j)
             {

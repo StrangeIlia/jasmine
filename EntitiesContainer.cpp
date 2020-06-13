@@ -18,9 +18,6 @@ bool EntitiesContainer::has(PolyhedronExtension* polyhedron) {
 }
 
 bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.lock();
-#endif
     EntityPair pair;
     pair.key = nullptr;
     pair.value = nullptr;
@@ -31,9 +28,6 @@ bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
         if(pair.value != nullptr)
             emit AbstractEntitySet::removed(pair.value);
         else {
-#if PARALLEL_CONTAINER_HANDLING
-            mutex.unlock();
-#endif
             return false;
         }
     }
@@ -42,26 +36,17 @@ bool EntitiesContainer::_setAppend(PolyhedronExtension* polyhedron) {
         pair.key = polyhedron;
         pair.value = nullptr;
         emit AbstractEntityMap::appended(pair);
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return true;
     }
     else {
         if(pair.value != nullptr) {
             emit AbstractEntityMap::changed(pair, nullptr);
         }
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return false;
     }
 }
 
 bool EntitiesContainer::_setRemove(PolyhedronExtension* polyhedron) {
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.lock();
-#endif
     auto iterator = container.find(polyhedron);
     if(iterator != container.end()) {
         EntityPair pair;
@@ -71,14 +56,8 @@ bool EntitiesContainer::_setRemove(PolyhedronExtension* polyhedron) {
         if(pair.value != nullptr)
             emit AbstractEntitySet::removed(pair.value);
         emit AbstractEntityMap::removed(pair);
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return true;
     }
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.unlock();
-#endif
     return false;
 }
 
@@ -93,9 +72,6 @@ bool EntitiesContainer::_setAppend(QEntity*) {
 }
 
 bool EntitiesContainer::_setRemove(QEntity* entity) {
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.lock();
-#endif
     auto key = container.key(entity);
     auto iterator = container.find(key);
     if(iterator != container.end()) {
@@ -105,14 +81,8 @@ bool EntitiesContainer::_setRemove(QEntity* entity) {
         container.remove(key);
         emit AbstractPolyhedronSet::removed(pair.key);
         emit AbstractEntityMap::removed(pair);
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return true;
     }
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.unlock();
-#endif
     return false;
 }
 
@@ -235,9 +205,6 @@ Enumerable<EntityPair> EntitiesContainer::childs(PolyhedronExtension* key) const
 }
 
 bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) {
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.lock();
-#endif
     PolyhedronExtension* oldKey = nullptr;
     auto iterator = container.find(key);
     if(iterator != container.end()) {
@@ -246,9 +213,6 @@ bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value, QEn
         if(oldValue != value)
             emit AbstractEntitySet::removed(oldValue);
         else {
-#if PARALLEL_CONTAINER_HANDLING
-            mutex.unlock();
-#endif
             return false;
         }
     }
@@ -257,38 +221,23 @@ bool EntitiesContainer::_mapAppend(PolyhedronExtension* key, QEntity* value, QEn
         emit AbstractPolyhedronSet::appended(key);
         if(value != nullptr)
             emit AbstractEntitySet::appended(value);
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return true;
     }
     else {
         if(oldValue != value && value != nullptr) {
             emit AbstractEntitySet::appended(value);
         }
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return false;
     }
 }
 
 bool EntitiesContainer::_mapChange(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) {
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.lock();
-#endif
     auto iterator = container.find(key);
     if(iterator == container.end()) {
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return false;
     }
     oldValue = iterator.value();
     if(oldValue == value) {
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return false;
     }
     emit AbstractEntitySet::removed(oldValue);
@@ -298,9 +247,6 @@ bool EntitiesContainer::_mapChange(PolyhedronExtension* key, QEntity* value, QEn
 }
 
 bool EntitiesContainer::_mapRemove(PolyhedronExtension* key) {
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.lock();
-#endif
     auto iterator = container.find(key);
     if(iterator != container.end()) {
         EntityPair pair;
@@ -310,14 +256,8 @@ bool EntitiesContainer::_mapRemove(PolyhedronExtension* key) {
         emit AbstractPolyhedronSet::removed(pair.key);
         if(pair.value != nullptr)
             emit AbstractEntitySet::removed(pair.value);
-#if PARALLEL_CONTAINER_HANDLING
-        mutex.unlock();
-#endif
         return true;
     }
-#if PARALLEL_CONTAINER_HANDLING
-    mutex.unlock();
-#endif
     return false;
 }
 

@@ -67,6 +67,8 @@ HEADERS += \
     initializers/AbstractViewInitializer.hpp \
     initializers/CameraAndLightInitalizer.h \
     initializers/SelectorInitializer.h \
+    initializers/actions_selector/ActionChangeColor.h \
+    initializers/actions_selector/ActionPointsGrid.h \
     mainwindow.h \
     utils/AbstractLockable.h \
     utils/Activator.h \
@@ -74,10 +76,12 @@ HEADERS += \
     utils/Centering.hpp \
     utils/Cleaner.hpp \
     utils/EntityConstructor.h \
+    utils/SmartComponent.h \
     utils/factories/AbstractGeometryFactory.hpp \
     utils/factories/AbstractMaterialFactory.hpp \
     utils/factories/AbstractTransformFactory.hpp \
     utils/factories/imp/MonotoneMethod_GeometryFactory.h \
+    utils/factories/imp/PointsGeometryFactory.h \
     utils/factories/imp/SimpleGeometryFactory.h \
     utils/factories/imp/SimpleMaterialFactory.h \
     utils/factories/imp/SimpleTransformFactory.h
@@ -95,13 +99,17 @@ SOURCES += \
     extensions/PolyhedronExtension.cpp \
     initializers/CameraAndLightInitalizer.cpp \
     initializers/SelectorInitializer.cpp \
+    initializers/actions_selector/ActionChangeColor.cpp \
+    initializers/actions_selector/ActionPointsGrid.cpp \
     main.cpp \
     mainwindow.cpp \
     utils/Activator.cpp \
     utils/Adapter.cpp \
     utils/Centering.cpp \
     utils/EntityConstructor.cpp \
+    utils/SmartComponent.cpp \
     utils/factories/imp/MonotoneMethod_GeometryFactory.cpp \
+    utils/factories/imp/PointsGeometryFactory.cpp \
     utils/factories/imp/SimpleGeometryFactory.cpp \
     utils/factories/imp/SimpleMaterialFactory.cpp \
     utils/factories/imp/SimpleTransformFactory.cpp

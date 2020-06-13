@@ -1,16 +1,22 @@
 #include "SelectorInitializer.h"
 
 namespace bstu {
-SelectorInitializer::SelectorInitializer(View3D *view) : AbstractViewInitializer(view)
+
+SelectorInitializer::Action::~Action() {}
+
+SelectorInitializer::SelectorInitializer(View3D *view, std::vector<Action*> _list) : AbstractViewInitializer(view)
 {
     QEntity* fictitious = new QEntity(view->rootEntity());
     QPhongMaterial* selectedMaterial = new QPhongMaterial(fictitious);
     selectedMaterial->setShareable(true);
-    selectedMaterial->setShininess(0.8f);
-    //selectedMaterial->setAlpha(1.0f);
-    selectedMaterial->setDiffuse(Qt::red);
-    this->selectedMaterial = selectedMaterial;
+
     fictitious->addComponent(selectedMaterial);
+    list = std::move(_list);
+}
+
+SelectorInitializer::~SelectorInitializer() {
+    for(SelectorInitializer::Action* action : list)
+        delete action;
 }
 
 void SelectorInitializer::init() {
@@ -29,17 +35,33 @@ void SelectorInitializer::init() {
 void SelectorInitializer::select(Qt3DRender::QPickEvent* event) {
     if(event->button() != Qt3DRender::QPickEvent::LeftButton) return;
     bool equals = selectedEntity == event->entity();
+    unselectDisable(false);
+    if(event->entity() != nullptr && !equals) {
+        selectedEntity = event->entity();
+        connect(selectedEntity, SIGNAL(destroyed(QObject*)), this, SLOT(unselectDelete(QObject*)));
+        connect(selectedEntity, SIGNAL(enabledChanged(bool)), this, SLOT(unselectDisable(bool)));
+        for(Action* action : list) {
+            action->entitySelected(selectedEntity);
+        }
+    }
+}
+
+void SelectorInitializer::unselectDelete(QObject* ) {
     if(selectedEntity != nullptr) {
-        selectedEntity->removeComponent(selectedMaterial);
-        selectedEntity->addComponent(oldMaterial);
+        disconnect(selectedEntity, SIGNAL(destroyed(QObject*)), this, SLOT(unselectDelete(QObject*)));
+        for(Action* action : list) {
+            action->entityUnselected(selectedEntity);
+        }
         selectedEntity = nullptr;
     }
-    if(event->entity() != nullptr && !equals) {
-        oldMaterial = event->entity()->componentsOfType<QMaterial>().first();
-        event->entity()->removeComponent(oldMaterial);
-        event->entity()->addComponent(selectedMaterial);
-        selectedMaterial->moveToThread(event->entity()->thread());
-        selectedEntity = event->entity();
+}
+
+void SelectorInitializer::unselectDisable(bool v) {
+    if(v == false){
+        if(selectedEntity != nullptr) {
+            disconnect(selectedEntity, SIGNAL(enabledChanged(bool)), this, SLOT(unselectDisable(bool)));
+            unselectDelete(nullptr);
+        }
     }
 }
 

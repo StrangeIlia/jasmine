@@ -9,7 +9,6 @@
 #include <QHash>
 #include <QMutex>
 
-#define PARALLEL_CONTAINER_HANDLING 0
 
 namespace bstu {
 
@@ -41,10 +40,6 @@ private:
     bool _mapAppend(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) override;
     bool _mapChange(PolyhedronExtension* key, QEntity* value, QEntity*& oldValue) override;
     bool _mapRemove(PolyhedronExtension* key) override;
-#if PARALLEL_CONTAINER_HANDLING
-    /// Для параллельной обработки
-    QMutex mutex;
-#endif
     /// Контейнер всех данных
     QHash<PolyhedronExtension*, QEntity*> container;
 };

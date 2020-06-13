@@ -13,6 +13,7 @@
 #include "utils/factories/imp/SimpleMaterialFactory.h"
 #include "utils/factories/imp/SimpleTransformFactory.h"
 #include "utils/factories/imp/MonotoneMethod_GeometryFactory.h"
+#include "utils/factories/imp/PointsGeometryFactory.h"
 
 #include "utils/Adapter.h"
 #include "utils/Activator.h"
@@ -24,9 +25,16 @@
 
 #include <iostream>
 
+#include "initializers/actions_selector/ActionChangeColor.h"
+#include "initializers/actions_selector/ActionPointsGrid.h"
+
 namespace bstu {
     Tree* create_box();
     Tree* create_greenhouse(int n);
+
+    // Разделяемый материал
+    // Удалять его вручную не нужно
+    QPhongMaterial* preparedMaterial(QNode* parrent);
 
     Tree* create_star(int n);
 
@@ -73,14 +81,42 @@ int main(int argc, char *argv[])
     /// (инициализация начнеться, когда view подаст сигнал о смене статуса
     /// удалять их в ручном режиме не надо, они удаляться вместе с view
     new CameraAndLightInitalizer(view);
-    /// Инициализация источника освещения и камеры
-    new SelectorInitializer(view);
+
+    std::vector<SelectorInitializer::Action*> actions;
+
+    QPhongMaterial* material;
+    material = preparedMaterial(view->rootEntity());
+    material->setShininess(0.8f);
+    material->setDiffuse(Qt::green);
+    actions.push_back(new ActionChangeColor(material));
+
+    material = preparedMaterial(view->rootEntity());
+    material->setShininess(0.8f);
+    material->setAmbient(Qt::red);
+    // Увеличиваем размер точек
+    QEffect *effect = material->effect();
+    for (auto t : effect->techniques()) {
+        for (auto rp : t->renderPasses()) {
+            auto pointSize = new QPointSize();
+            pointSize->setSizeMode(QPointSize::SizeMode::Fixed);
+            pointSize->setValue(10.0f);
+            rp->addRenderState(pointSize);
+        }
+    }
+
+    actions.push_back(new ActionPointsGrid(material));
+
+    /// Инициализация селектора
+    new SelectorInitializer(view, actions);
 
     AbstractGeometryFactory* geometryFactory =
             //new SimpleGeometryFactory();
             new MonotoneMethod_GeometryFactory();
-    AbstractMaterialFactory* materialFactory = new SimpleMaterialFactory(view->rootEntity());
-    AbstractTransformFactory* transformFactory = new SimpleTransformFactory(view->rootEntity());
+            //new PointsGeometryFactory();
+    AbstractMaterialFactory* materialFactory =
+            new SimpleMaterialFactory(view->rootEntity());
+    AbstractTransformFactory* transformFactory =
+            new SimpleTransformFactory(view->rootEntity());
 
     /// Для оптимизации обновления положения, при центровке
     TransformsSet* transformsSet = new TransformsSet(view);
@@ -354,6 +390,14 @@ Tree* test_ComplexSurface_5(Convertor convertor) {
     Tree* tree = new Tree();
     tree->addPolyhedron(new Polyhedron(polygons, polygonsCount));
     return tree;
+}
+
+QPhongMaterial* preparedMaterial(QNode* parrent) {
+    QEntity* fictitious = new QEntity(parrent);
+    QPhongMaterial* material = new QPhongMaterial(fictitious);
+    material->setShareable(true);
+    fictitious->addComponent(material);
+    return material;
 }
 
 Tree* create_star(int n) {

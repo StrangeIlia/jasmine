@@ -10,6 +10,8 @@
 #include "collections/AbstractTransformSet.h"
 #include "collections/AbstractEntityMap.hpp"
 
+#include "SmartComponent.h"
+
 namespace bstu {
 class EntityConstructor : public QObject
 {

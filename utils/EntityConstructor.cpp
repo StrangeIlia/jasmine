@@ -26,6 +26,7 @@ void EntityConstructor::createEntity(EntityPair pair) {
     entity->addComponent(transform);
     entity->addComponent(geometry->create(polyhedron));
     entity->addComponent(material->create(polyhedron));
+    entity->addComponent(new SmartComponent(pair.key));
     map->change(pair.key, entity);
 }
 
